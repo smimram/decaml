@@ -69,13 +69,13 @@ module Expr = struct
   let string_of_pattern = function
     | PVar x -> x
 
-  let rec to_string e =
+  let rec to_string ?(pa=false) e =
+    let pa s = if pa then "("^s^")" else s in
     match e.desc with
-    | Let ((p, v), e) -> Printf.sprintf "let %s = %s in %s" (string_of_pattern p) (to_string v) (to_string e)
-    | Abs (p, t, e) ->
-      Printf.sprintf "(fun (%s : %s) -> %s)" (string_of_pattern p) (to_string t) (to_string e)
-    | App (f, e) -> Printf.sprintf "(%s %s)" (to_string f) (to_string e)
-    | Pi (p, t, e) -> Printf.sprintf "((%s : %s) -> %s)" (string_of_pattern p) (to_string t) (to_string e)
+    | Let ((p, v), e) -> pa (Printf.sprintf "let %s = %s in %s" (string_of_pattern p) (to_string v) (to_string e))
+    | Abs (p, t, e) -> pa (Printf.sprintf "fun (%s : %s) -> %s" (string_of_pattern p) (to_string t) (to_string e))
+    | App (f, e) -> pa (Printf.sprintf "%s %s" (to_string f) (to_string ~pa:true e))
+    | Pi (p, t, e) -> pa (Printf.sprintf "(%s : %s) -> %s" (string_of_pattern p) (to_string t) (to_string e))
     | Var x -> x
     | Type -> "Type"
     | Cast (e, t) -> Printf.sprintf "(%s : %s)" (to_string e) (to_string t)

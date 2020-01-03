@@ -21,6 +21,7 @@ decls:
 
 decl:
   | LET f = IDENT a = args COLON t = expr EQ e = expr { (PVar f, abss ~pos:$loc a (cast ~pos:e.pos e t)) }
+  | LET f = IDENT a = args EQ e = expr { (PVar f, abss ~pos:$loc a e) }
 
 args:
   | arg args { $1 :: $2 }
