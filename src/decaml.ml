@@ -29,4 +29,14 @@ let () =
       failwith err
   in
   close_in ic;
-  ignore defs
+  let types =
+    List.fold_left
+      (fun env (p, t) ->
+         Printf.printf "\n";
+         let a = Lang.infer 0 env t in
+         let t = Lang.eval env t in
+         Printf.printf "%s : %s\n%!" (Lang.string_of_pattern p) (Lang.V.to_string a);
+         Lang.Env.add env p a t
+      ) Lang.Env.empty defs
+  in
+  ignore types

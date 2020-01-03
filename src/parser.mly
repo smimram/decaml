@@ -9,7 +9,7 @@
 %token EOF
 
 %start main
-%type<(string * Lang.t) list> main
+%type<Lang.decl list> main
 %%
 
 main:
@@ -20,7 +20,7 @@ decls:
   | { [] }
 
 decl:
-  | LET f = IDENT a = args COLON t = expr EQ e = expr { (f, abss ~pos:$loc a (cast ~pos:e.pos e t)) }
+  | LET f = IDENT a = args COLON t = expr EQ e = expr { (PVar f, abss ~pos:$loc a (cast ~pos:e.pos e t)) }
 
 args:
   | arg args { $1 :: $2 }
@@ -33,5 +33,6 @@ pattern:
   | IDENT { PVar $1 }
 
 expr:
+  | decl IN expr { letin ~pos:$loc $1 $3 }
   | IDENT { var ~pos:$loc $1 }
   | TYPE { typ ~pos:$loc () }
