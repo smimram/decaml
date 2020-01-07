@@ -349,5 +349,5 @@ and declare i env = function
     let env = declare i env (Def (PVar tname, cons tname tt)) in
     List.fold_left
       (fun env (c, a) ->
-         declare i env (Def (PVar c, a))
+         declare i env (Def (PVar c, cons c a))
       ) env ind.ind_cons
