@@ -27,7 +27,7 @@ module Expr = struct
     | Var of var
     | Cast of t * t (** cast an expression to a given type *)
     | Type (** the type of types *)
-    | Cons of cons * t (** constructor *)
+    | Cons of cons * t (** constructor of given type *)
 
   and pattern =
     | PVar of var
@@ -343,11 +343,13 @@ and declare i env = function
     Printf.printf "DECLARE %s : %s\n%!" (string_of_pattern p) (V.to_string a);
     Env.add env p a t
   | Ind ind ->
-    (* TODO: perform sanity checks... *)
+    (* TODO: more sanity checks... *)
     let tname = ind.ind_name in
     let tt = pis ind.ind_param ind.ind_type in
+    check i env tt Type;
     let env = declare i env (Def (PVar tname, cons tname tt)) in
     List.fold_left
       (fun env (c, a) ->
+         check i env a V.Type;
          declare i env (Def (PVar c, cons c a))
       ) env ind.ind_cons
