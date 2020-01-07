@@ -3,7 +3,7 @@ let () =
   let fname = Sys.argv.(1) in
   let ic = open_in fname in
   let lexbuf = Lexing.from_channel ic in
-  let defs =
+  let decls =
     try
       Parser.main Lexer.token lexbuf
     with
@@ -30,11 +30,12 @@ let () =
       failwith err
   in
   close_in ic;
+  List.iter (fun decl -> print_endline (Lang.string_of_decl decl)) decls;
   let types =
     List.fold_left
       (fun env decl ->
          Printf.printf "\n";
          Lang.declare 0 env decl
-      ) Lang.Env.empty defs
+      ) Lang.Env.empty decls
   in
   ignore types

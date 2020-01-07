@@ -27,6 +27,7 @@ module Expr = struct
     | Var of var
     | Cast of t * t (** cast an expression to a given type *)
     | Type (** the type of types *)
+    | Cons of cons * t (** constructor *)
 
   and pattern =
     | PVar of var
@@ -70,7 +71,10 @@ module Expr = struct
   let letin ?pos (p, v) e =
     mk ?pos (Let ((p, v), e))
 
-  (** Multiple typed abstractions. *)
+  let cons ?pos c a =
+    mk ?pos (Cons (c, a))
+
+  (** Multiple abstractions. *)
   let abss ?pos a e =
     let pos = Option.value ~default:e.pos pos in
     let rec aux = function
@@ -78,6 +82,15 @@ module Expr = struct
       | (x,t)::l -> abs ~pos x t (aux l)
     in
     aux a
+
+  (** Multiple pi types. *)
+  let rec pis ?pos args a =
+    let pos = Option.value ~default:a.pos pos in
+    let rec aux = function
+      | [] -> a
+      | (x,a)::l -> pi ~pos x a (aux l)
+    in
+    aux args
 
   let string_of_pattern = function
     | PVar x -> x
@@ -92,6 +105,7 @@ module Expr = struct
     | Var x -> x
     | Type -> "Type"
     | Cast (e, t) -> Printf.sprintf "(%s : %s)" (to_string e) (to_string t)
+    | Cons (c, _) -> c
 
   let string_of_decl = function
     | Def (p, v) -> Printf.sprintf "let %s = %s" (string_of_pattern p) (to_string v)
@@ -115,21 +129,13 @@ module Value = struct
   type t =
     | Abs of t * (t -> t)
     | Pi of t * (t -> t)
-    (* | Ind of ind *)
     | Type
     | Neutral of neutral
   and neutral =
     | Var of var
     | App of neutral * t
     | Cast of neutral * t
-              (*
-  and ind =
-    {
-      ind_params : (var * t) list;
-      ind_indices : (var * t) list;
-      ind_cons : (cons * ((var * t) list * t list)) list;
-    }
-*)
+    | Cons of cons * t
 
   let is_neutral = function
     | Neutral _ -> true
@@ -163,6 +169,9 @@ module Value = struct
         let u = neutral i u in
         let t = readback i t in
         Expr.cast u t
+      | Cons (c, a) ->
+        let a = readback i a in
+        Expr.cons c a
     in
     match v with
     | Abs (t, f) ->
@@ -176,18 +185,6 @@ module Value = struct
       let e = readback (i+1) (f (var x)) in
       Expr.pi (PVar x) t e
     | Type -> Expr.typ ()
-                (*
-    | Ind ind ->
-      let ind =
-        let f = List.map (fun (p,a) -> p, readback i v) in
-        {
-          Expr.ind_params = f ind.ind_params;
-          ind_indices = f ind.ind_indices;
-          ind_cons = List.map (fun (c, (args, vv)) -> c, (f args, List.map (readback i) vv)) ind.ind_cons;
-        }
-      in
-      Expr.ind ind
-*)
     | Neutral u -> neutral i u
 
   (** Convertibility of values. *)
@@ -239,16 +236,9 @@ let rec eval env e =
     let e = eval env e in
     let t = eval env t in
     V.cast e t
-      (*
-  | Ind ind ->
-    let env, params =
-      List.fold_left_map
-        (fun env (x, a) ->
-           let a = eval env a in
-           let env = (V.Env.add env (PVar
-        ) env ind.ind_params
-    in
-*)
+  | Cons (c, a) ->
+    let a = eval env a in
+    V.Neutral (V.Cons (c,a))
 
 (** Typing environment. *)
 module Env = struct
@@ -326,6 +316,8 @@ let rec infer i (env : Env.t) t =
     check i env t a;
     a
   | Type -> V.Type
+  | Cons (_, a) ->
+    eval env a
 
 (** Check that an expression has given type. *)
 and check i env t a =
@@ -350,4 +342,12 @@ and declare i env = function
     let t = eval env t in
     Printf.printf "DECLARE %s : %s\n%!" (string_of_pattern p) (V.to_string a);
     Env.add env p a t
-  | Ind i -> failwith "TODO"
+  | Ind ind ->
+    (* TODO: perform sanity checks... *)
+    let tname = ind.ind_name in
+    let tt = pis ind.ind_param ind.ind_type in
+    let env = declare i env (Def (PVar tname, cons tname tt)) in
+    List.fold_left
+      (fun env (c, a) ->
+         declare i env (Def (PVar c, a))
+      ) env ind.ind_cons
