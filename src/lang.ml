@@ -1,3 +1,5 @@
+open Extlib
+
 module Pos = struct
   type t = Lexing.position * Lexing.position
 
@@ -18,19 +20,30 @@ module Expr = struct
     }
 
   and desc =
-    | Let of decl * t
+    | Let of def * t
     | Abs of pattern * t * t
     | App of t * t
     | Pi of pattern * t * t
     | Var of var
     | Cast of t * t (** cast an expression to a given type *)
-    (* | Ind of (cons * t list) list (\** an inductive type *\) *)
-    | Type
+    | Type (** the type of types *)
 
   and pattern =
     | PVar of var
 
-  and decl = pattern * t
+  and decl =
+    | Def of def
+    | Ind of ind (** an inductive type *)
+
+  and def = pattern * t
+
+  and ind =
+    {
+      ind_name : cons; (** name of the inductive type *)
+      ind_param : (pattern * t) list; (** parameters *)
+      ind_type : t; (** type of the type constructor (without parameters) *)
+      ind_cons : (cons * t) list; (** constructors *)
+    }
 
   let mk ?pos desc =
     let pos = Option.value ~default:Pos.dummy pos in
@@ -79,6 +92,16 @@ module Expr = struct
     | Var x -> x
     | Type -> "Type"
     | Cast (e, t) -> Printf.sprintf "(%s : %s)" (to_string e) (to_string t)
+
+  let string_of_decl = function
+    | Def (p, v) -> Printf.sprintf "let %s = %s" (string_of_pattern p) (to_string v)
+    | Ind i ->
+      let name = i.ind_name in
+      let param = List.map (fun (p, a) -> Printf.sprintf "(%s : %s)" (string_of_pattern p) (to_string a)) i.ind_param in
+      let param = String.concat " " param in
+      let cons = List.map (fun (c, a) -> Printf.sprintf "| %s : %s" c (to_string a)) i.ind_cons in
+      let cons = String.concat " " cons in
+      Printf.sprintf "type %s %s : %s = %s" name param (to_string i.ind_type) cons
 end
 
 include Expr
@@ -87,16 +110,26 @@ let string_of_expr = Expr.to_string
 
 module Value = struct
   type nonrec var = var
+  type nonrec cons = cons
 
   type t =
     | Abs of t * (t -> t)
     | Pi of t * (t -> t)
+    (* | Ind of ind *)
     | Type
     | Neutral of neutral
   and neutral =
     | Var of var
     | App of neutral * t
     | Cast of neutral * t
+              (*
+  and ind =
+    {
+      ind_params : (var * t) list;
+      ind_indices : (var * t) list;
+      ind_cons : (cons * ((var * t) list * t list)) list;
+    }
+*)
 
   let is_neutral = function
     | Neutral _ -> true
@@ -143,6 +176,18 @@ module Value = struct
       let e = readback (i+1) (f (var x)) in
       Expr.pi (PVar x) t e
     | Type -> Expr.typ ()
+                (*
+    | Ind ind ->
+      let ind =
+        let f = List.map (fun (p,a) -> p, readback i v) in
+        {
+          Expr.ind_params = f ind.ind_params;
+          ind_indices = f ind.ind_indices;
+          ind_cons = List.map (fun (c, (args, vv)) -> c, (f args, List.map (readback i) vv)) ind.ind_cons;
+        }
+      in
+      Expr.ind ind
+*)
     | Neutral u -> neutral i u
 
   (** Convertibility of values. *)
@@ -194,6 +239,16 @@ let rec eval env e =
     let e = eval env e in
     let t = eval env t in
     V.cast e t
+      (*
+  | Ind ind ->
+    let env, params =
+      List.fold_left_map
+        (fun env (x, a) ->
+           let a = eval env a in
+           let env = (V.Env.add env (PVar
+        ) env ind.ind_params
+    in
+*)
 
 (** Typing environment. *)
 module Env = struct
@@ -227,10 +282,8 @@ let rec infer i (env : Env.t) t =
   (* Printf.printf "INFER %s\n%!" (to_string t); *)
   let pos = t.pos in
   match t.desc with
-  | Let ((p, t), u) ->
-    let a = infer i env t in
-    let t = eval env t in
-    let env = Env.add env p a t in
+  | Let (def, u) ->
+    let env = declare i env (Def def) in
     infer i env u
   | Var x ->
     (
@@ -289,3 +342,12 @@ and check i env t a =
   | _, _ ->
     let a' = infer i env t in
     if not (V.eq i a' a) then type_error pos "wrong type"
+
+(** Perform a declaration in the environment. *)
+and declare i env = function
+  | Def (p, t) ->
+    let a = infer i env t in
+    let t = eval env t in
+    Printf.printf "DECLARE %s : %s\n%!" (string_of_pattern p) (V.to_string a);
+    Env.add env p a t
+  | Ind i -> failwith "TODO"

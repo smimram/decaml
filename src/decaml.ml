@@ -17,7 +17,8 @@ let () =
           err
       in
       failwith err
-    | Parsing.Parse_error ->
+    | _ ->
+    (* | Parsing.Parse_error -> *)
       let pos = (Lexing.lexeme_end_p lexbuf) in
       let err =
         Printf.sprintf
@@ -31,12 +32,9 @@ let () =
   close_in ic;
   let types =
     List.fold_left
-      (fun env (p, t) ->
+      (fun env decl ->
          Printf.printf "\n";
-         let a = Lang.infer 0 env t in
-         let t = Lang.eval env t in
-         Printf.printf "%s : %s\n%!" (Lang.string_of_pattern p) (Lang.V.to_string a);
-         Lang.Env.add env p a t
+         Lang.declare 0 env decl
       ) Lang.Env.empty defs
   in
   ignore types

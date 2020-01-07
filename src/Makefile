@@ -1,4 +1,4 @@
-SOURCES = lang.ml parser.mly lexer.mll decaml.ml
+SOURCES = extlib.ml lang.ml parser.mly lexer.mll decaml.ml
 RESULT = decaml
 
 OCAMLYACC = menhir
