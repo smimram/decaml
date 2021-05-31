@@ -84,7 +84,7 @@ module Expr = struct
     aux a
 
   (** Multiple pi types. *)
-  let rec pis ?pos args a =
+  let pis ?pos args a =
     let pos = Option.value ~default:a.pos pos in
     let rec aux = function
       | [] -> a
@@ -144,7 +144,7 @@ module Value = struct
   let var x = Neutral (Var x)
 
   (** Apply a value to another. *)
-  let rec app u v =
+  let app u v =
     match u with
     | Abs (_, f) -> f v
     | Pi (_, t) -> t v
@@ -253,11 +253,11 @@ module Env = struct
     in
     tenv, V.Env.add env p t
 
-  let get_type ((tenv, env):t) x = List.assoc x tenv
+  let get_type ((tenv, _):t) x = List.assoc x tenv
 
-  let get_value ((tenv, env):t) x = V.Env.get x env
+  let get_value ((_, env):t) x = V.Env.get x env
 
-  let eval ((tenv, env):t) = env
+  let eval ((_, env):t) = env
 end
 
 let eval env t = eval (Env.eval env) t

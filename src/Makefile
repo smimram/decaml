@@ -1,11 +1,6 @@
-SOURCES = extlib.ml lang.ml parser.mly lexer.mll decaml.ml
-RESULT = decaml
-
-OCAMLYACC = menhir
-
 test: all
-	./decaml test.dml
+	@dune exec ./decaml.exe test.dml
 
-all: dnc
+all:
+	$(MAKE) -C ..
 
-include OCamlMakefile
