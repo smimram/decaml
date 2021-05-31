@@ -7,6 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: ocaml/setup-ocaml@v2
+      - name: Install packages
+        run: sudo apt-get install ocaml-nox menhir
       - name: Build
         run: make -C src
