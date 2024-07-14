@@ -1,5 +1,6 @@
 open Extlib
 
+(** Positions in files. *)
 module Pos = struct
   type t = Lexing.position * Lexing.position
 
@@ -12,16 +13,19 @@ type var = string
 (** A constructor. *)
 type cons = string
 
+(** Expressions. *)
 module Expr = struct
+  (** An expression. *)
   type t =
     {
       pos : Pos.t;
       desc : desc;
     }
 
+  (** The contents of an expression. *)
   and desc =
     | Let of def * t
-    | Abs of pattern * t * t
+    | Abs of pattern * t * t (** λ-abstraction *)
     | App of t * t
     | Pi of pattern * t * t
     | Var of var
@@ -29,6 +33,7 @@ module Expr = struct
     | Type (** the type of types *)
     | Cons of cons * t (** constructor of given type *)
 
+  (** A pattern. *)
   and pattern =
     | PVar of var
 
@@ -38,6 +43,7 @@ module Expr = struct
 
   and def = pattern * t
 
+  (** An inductive type. *)
   and ind =
     {
       ind_name : cons; (** name of the inductive type *)
@@ -45,7 +51,7 @@ module Expr = struct
       ind_type : t; (** type of the type constructor (without parameters) *)
       ind_cons : (cons * t) list; (** constructors *)
     }
-
+    
   let mk ?pos desc =
     let pos = Option.value ~default:Pos.dummy pos in
     { pos; desc }
@@ -122,6 +128,7 @@ include Expr
 
 let string_of_expr = Expr.to_string
 
+(** Values. *)
 module Value = struct
   type nonrec var = var
   type nonrec cons = cons
@@ -131,11 +138,20 @@ module Value = struct
     | Pi of t * (t -> t)
     | Type
     | Neutral of neutral
+
   and neutral =
     | Var of var
+    | EVar of evar
     | App of neutral * t
     | Cast of neutral * t
     | Cons of cons * t
+
+  (** Typing environment. *)
+  and tenv = (var * t) list
+
+  (** A meta-variable, with given typing context, output type and maybe
+      substituted value. *)
+  and evar = (tenv * t) * t option ref
 
   let is_neutral = function
     | Neutral _ -> true
@@ -165,6 +181,7 @@ module Value = struct
         let v = readback i v in
         Expr.app u v
       | Var x -> Expr.var x
+      | EVar _ -> failwith "TODO"
       | Cast (u, t) ->
         let u = neutral i u in
         let t = readback i t in
@@ -240,9 +257,10 @@ let rec eval env e =
     let a = eval env a in
     V.Neutral (V.Cons (c,a))
 
-(** Typing environment. *)
+(** Full typing environment. *)
 module Env = struct
-  type nonrec t = (var * V.t) list * V.Env.t (** typing and evaluation environment *)
+  (** Typing and evaluation environments. *)
+  type nonrec t = V.tenv * V.Env.t
 
   let empty : t = [], V.Env.empty
 
@@ -260,12 +278,22 @@ module Env = struct
   let eval ((_, env):t) = env
 end
 
+(** Typing constraints. *)
+module Constraints = struct
+  (** A constraint. *)
+  type constr = V.tenv * V.evar * V.evar
+
+  type t = constr list
+end
+
+module C = Constraints
+
 let eval env t = eval (Env.eval env) t
 
 exception Type_error of Pos.t * string
 
 let type_error pos =
-  Printf.kprintf (fun s -> raise (Type_error (pos, s)))
+  Printf.ksprintf (fun s -> raise (Type_error (pos, s)))
 
 (** Infer the type of an expression. *)
 let rec infer i (env : Env.t) t =
@@ -331,7 +359,7 @@ and check i env t a =
     let i = i+1 in
     let env = Env.add env p a x in
     check i env t (b x)
-  | _, _ ->
+  |  _ ->
     let a' = infer i env t in
     if not (V.eq i a' a) then type_error pos "wrong type"
 
