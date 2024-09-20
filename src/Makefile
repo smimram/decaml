@@ -3,4 +3,3 @@ test: all
 
 all:
 	$(MAKE) -C ..
-
