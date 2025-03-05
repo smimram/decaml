@@ -30,15 +30,9 @@ let () =
       failwith err
   in
   close_in ic;
-  (*
-  List.iter (fun decl -> print_endline (Lang.string_of_decl decl)) decls;
-  let types =
-    List.fold_left
-      (fun env decl ->
-         Printf.printf "\n";
-         Lang.declare 0 env decl
-      ) Lang.Env.empty decls
-  in
-  ignore types
-*)
-  ignore decls
+  List.fold_left
+    (fun env decl ->
+       match decl with
+       | Preterm.Def (x,t) ->
+         let t, a = Lang.infer env t in
+    ) Lang.Context.empty decls

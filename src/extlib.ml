@@ -1,11 +1,10 @@
 module List = struct
   include List
 
-  let rec fold_left_map f s l =
-    match l with
-    | x::l ->
-      let s, x = f s x in
-      let s, l = fold_left_map f s l in
-      s, x::l
-    | [] -> s, l
+  let index p l =
+    let rec aux n = function
+      | x::l -> if p x then n else aux (n+1) l
+      | [] -> raise Not_found
+    in
+    aux 0 l
 end
