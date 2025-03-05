@@ -6,5 +6,3 @@ module Pos = struct
 end
 
 type icit = [`Explicit | `Implicit]
-
-let todo () = failwith "TODO"

@@ -15,7 +15,7 @@ type t =
 (** The contents of an expression. *)
 and desc =
   | Abs of (var * icit * ty) * t (** λ-abstraction *)
-  | App of t * t
+  | App of t * (icit * t)
   | Var of var
   | Pi of (var * icit * ty) * t
   | Type (** the type of types *)
@@ -58,7 +58,13 @@ let rec to_string ?(pa=false) e =
   | Abs ((x,i,t), e) ->
     let arg = icit i (x ^ " : " ^ to_string t) in
     pa (Printf.sprintf "fun %s -> %s" arg (to_string e))
-  | App (f, e) -> pa (Printf.sprintf "%s %s" (to_string f) (to_string ~pa:true e))
+  | App (f,(i,e)) ->
+    let e =
+      match i with
+      | `Explicit -> to_string ~pa:true e
+      | `Implicit -> "{" ^ to_string e ^ "}"
+    in
+    pa (Printf.sprintf "%s %s" (to_string f) e)
   | Pi ((x,i,t),e) ->
     let arg = icit i (x ^ " : " ^ to_string t) in
     pa (Printf.sprintf "%s -> %s" arg (to_string e))

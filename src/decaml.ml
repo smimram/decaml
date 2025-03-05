@@ -31,8 +31,10 @@ let () =
   in
   close_in ic;
   List.fold_left
-    (fun env decl ->
+    (fun ctx decl ->
        match decl with
        | Preterm.Def (x,t) ->
          let t, a = Lang.infer env t in
+         Printf.printf "defined %s\n%!" x;
+         Lang.Context.bind ctx x a
     ) Lang.Context.empty decls
