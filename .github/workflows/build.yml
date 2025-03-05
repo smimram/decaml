@@ -8,6 +8,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install packages
-        run: sudo apt-get install ocaml-nox menhir dune
+        run: sudo apt-get install ocaml-nox menhir ocaml-dune
       - name: Build
         run: make -C src
