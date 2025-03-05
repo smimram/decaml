@@ -10,4 +10,4 @@ jobs:
       - name: Install packages
         run: sudo apt-get install ocaml-nox menhir ocaml-dune
       - name: Build
-        run: make -C src
+        run: make
