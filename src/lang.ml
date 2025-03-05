@@ -17,9 +17,7 @@ module Value = struct
 
   and neutral =
     | Var of var
-    | EVar of evar
     | App of neutral * t
-    | Cast of neutral * t
     | Cons of cons * t
 
   (** Typing environment. *)
@@ -43,11 +41,6 @@ module Value = struct
     | Neutral u -> Neutral (App (u, v))
     | _ -> assert false
 
-  let cast u t =
-    match u with
-    | Neutral u -> Neutral (Cast (u, t))
-    | u -> u
-
   let fresh i = "x#" ^ string_of_int i
 
   let rec readback i v =
@@ -57,11 +50,6 @@ module Value = struct
         let v = readback i v in
         Term.app u v
       | Var x -> Term.var x
-      | EVar _ -> failwith "TODO"
-      | Cast (u, t) ->
-        let u = neutral i u in
-        let t = readback i t in
-        Term.cast u t
       | Cons (c, a) ->
         let a = readback i a in
         Term.cons c a

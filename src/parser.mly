@@ -38,7 +38,7 @@ pattern:
   | IDENT { PVar $1 }
 
 expr:
-  | def IN expr { letin ~pos:$loc $1 $3 }
+  | def IN expr { mk ~pos:$loc (Let ($1, $3)) }
   | IDENT { var ~pos:$loc $1 }
   | TYPE { typ ~pos:$loc () }
 
