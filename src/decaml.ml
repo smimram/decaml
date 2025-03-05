@@ -30,6 +30,7 @@ let () =
       failwith err
   in
   close_in ic;
+  (*
   List.iter (fun decl -> print_endline (Lang.string_of_decl decl)) decls;
   let types =
     List.fold_left
@@ -39,3 +40,5 @@ let () =
       ) Lang.Env.empty decls
   in
   ignore types
+*)
+  ignore decls

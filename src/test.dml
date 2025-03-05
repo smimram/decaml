@@ -1,5 +1,1 @@
-type Bool =
-| true : Bool
-| false : Bool
-
 let id (a : Type) (x : a) = x
