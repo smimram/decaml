@@ -1,8 +1,7 @@
-(ocamllex
-  (modules lexer))
+(ocamllex (modules lexer))
 
-(menhir
-  (modules parser))
+(menhir (modules parser))
 
 (executable
- (name decaml))
+ (name decaml)
+)

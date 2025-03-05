@@ -1,132 +1,8 @@
 open Extlib
 
-(** Positions in files. *)
-module Pos = struct
-  type t = Lexing.position * Lexing.position
+include Term
 
-  let dummy : t = Lexing.dummy_pos, Lexing.dummy_pos
-end
-
-(** A variable. *)
-type var = string
-
-(** A constructor. *)
-type cons = string
-
-(** Expressions. *)
-module Expr = struct
-  (** An expression. *)
-  type t =
-    {
-      pos : Pos.t;
-      desc : desc;
-    }
-
-  (** The contents of an expression. *)
-  and desc =
-    | Let of def * t
-    | Abs of pattern * t * t (** λ-abstraction *)
-    | App of t * t
-    | Pi of pattern * t * t
-    | Var of var
-    | Cast of t * t (** cast an expression to a given type *)
-    | Type (** the type of types *)
-    | Cons of cons * t (** constructor of given type *)
-
-  (** A pattern. *)
-  and pattern =
-    | PVar of var
-
-  and decl =
-    | Def of def
-    | Ind of ind (** an inductive type *)
-
-  and def = pattern * t
-
-  (** An inductive type. *)
-  and ind =
-    {
-      ind_name : cons; (** name of the inductive type *)
-      ind_param : (pattern * t) list; (** parameters *)
-      ind_type : t; (** type of the type constructor (without parameters) *)
-      ind_cons : (cons * t) list; (** constructors *)
-    }
-    
-  let mk ?pos desc =
-    let pos = Option.value ~default:Pos.dummy pos in
-    { pos; desc }
-
-  let abs ?pos x t e =
-    mk ?pos (Abs (x, t, e))
-
-  let pi ?pos x t e =
-    mk ?pos (Pi (x, t, e))
-
-  let app ?pos f e =
-    mk ?pos (App (f, e))
-
-  let var ?pos x =
-    mk ?pos (Var x)
-
-  let typ ?pos () =
-    mk ?pos Type
-
-  let cast ?pos e t =
-    mk ?pos (Cast (e, t))
-
-  let letin ?pos (p, v) e =
-    mk ?pos (Let ((p, v), e))
-
-  let cons ?pos c a =
-    mk ?pos (Cons (c, a))
-
-  (** Multiple abstractions. *)
-  let abss ?pos a e =
-    let pos = Option.value ~default:e.pos pos in
-    let rec aux = function
-      | [] -> e
-      | (x,t)::l -> abs ~pos x t (aux l)
-    in
-    aux a
-
-  (** Multiple pi types. *)
-  let pis ?pos args a =
-    let pos = Option.value ~default:a.pos pos in
-    let rec aux = function
-      | [] -> a
-      | (x,a)::l -> pi ~pos x a (aux l)
-    in
-    aux args
-
-  let string_of_pattern = function
-    | PVar x -> x
-
-  let rec to_string ?(pa=false) e =
-    let pa s = if pa then "("^s^")" else s in
-    match e.desc with
-    | Let ((p, v), e) -> pa (Printf.sprintf "let %s = %s in %s" (string_of_pattern p) (to_string v) (to_string e))
-    | Abs (p, t, e) -> pa (Printf.sprintf "fun (%s : %s) -> %s" (string_of_pattern p) (to_string t) (to_string e))
-    | App (f, e) -> pa (Printf.sprintf "%s %s" (to_string f) (to_string ~pa:true e))
-    | Pi (p, t, e) -> pa (Printf.sprintf "(%s : %s) -> %s" (string_of_pattern p) (to_string t) (to_string e))
-    | Var x -> x
-    | Type -> "Type"
-    | Cast (e, t) -> Printf.sprintf "(%s : %s)" (to_string e) (to_string t)
-    | Cons (c, _) -> c
-
-  let string_of_decl = function
-    | Def (p, v) -> Printf.sprintf "let %s = %s" (string_of_pattern p) (to_string v)
-    | Ind i ->
-      let name = i.ind_name in
-      let param = List.map (fun (p, a) -> Printf.sprintf "(%s : %s)" (string_of_pattern p) (to_string a)) i.ind_param in
-      let param = String.concat " " param in
-      let cons = List.map (fun (c, a) -> Printf.sprintf "| %s : %s" c (to_string a)) i.ind_cons in
-      let cons = String.concat " " cons in
-      Printf.sprintf "type %s %s : %s = %s" name param (to_string i.ind_type) cons
-end
-
-include Expr
-
-let string_of_expr = Expr.to_string
+let string_of_term = Term.to_string
 
 (** Values. *)
 module Value = struct
@@ -179,29 +55,29 @@ module Value = struct
       | App (u, v) ->
         let u = neutral i u in
         let v = readback i v in
-        Expr.app u v
-      | Var x -> Expr.var x
+        Term.app u v
+      | Var x -> Term.var x
       | EVar _ -> failwith "TODO"
       | Cast (u, t) ->
         let u = neutral i u in
         let t = readback i t in
-        Expr.cast u t
+        Term.cast u t
       | Cons (c, a) ->
         let a = readback i a in
-        Expr.cons c a
+        Term.cons c a
     in
     match v with
     | Abs (t, f) ->
       let t = readback i t in
       let x = fresh i in
       let e = readback (i+1) (f (var x)) in
-      Expr.abs (PVar x) t e
+      Term.abs (PVar x) t e
     | Pi (t, f) ->
       let t = readback i t in
       let x = fresh i in
       let e = readback (i+1) (f (var x)) in
-      Expr.pi (PVar x) t e
-    | Type -> Expr.typ ()
+      Term.pi (PVar x) t e
+    | Type -> Term.typ ()
     | Neutral u -> neutral i u
 
   (** Convertibility of values. *)
