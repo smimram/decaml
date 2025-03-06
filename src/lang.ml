@@ -44,7 +44,7 @@ end
 let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   match t.desc with
   | Abs ((x,i,a),t) ->
-    let a = check ctx a Type in
+    let a = check ctx a V.Type in
     let a = V.eval ctx.Context.environment a in
     let ctx' = Context.bind ctx x a in
     let t, b = infer ctx' t in
