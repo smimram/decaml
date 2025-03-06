@@ -2,7 +2,7 @@
 open Preterm
 %}
 
-%token LET IN EQ COLON IND
+%token LET IN EQ COLON
 %token LPAR RPAR VBAR
 %token TYPE
 %token<string> IDENT
