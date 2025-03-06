@@ -1,5 +1,4 @@
 open Common
-open Extlib
 
 module P = Preterm
 module T = Term
@@ -77,4 +76,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   | Type ->
     Type, Type
 
-and check (ctx:Context.t) (t:preterm) (a:ty) : term = failwith "TODO"
+and check (ctx:Context.t) (t:preterm) (a:ty) : term =
+  let t, a' = infer ctx t in
+  V.unify ctx.Context.level a' a;
+  t

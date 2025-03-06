@@ -30,11 +30,12 @@ let () =
       failwith err
   in
   close_in ic;
+  ignore @@
   List.fold_left
     (fun ctx decl ->
        match decl with
        | Preterm.Def (x,t) ->
-         let t, a = Lang.infer env t in
-         Printf.printf "defined %s\n%!" x;
+         let _t, a = Lang.infer ctx t in
+         Printf.printf "defined %s : %s\n%!" x (Value.to_string a);
          Lang.Context.bind ctx x a
     ) Lang.Context.empty decls

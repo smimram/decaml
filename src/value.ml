@@ -71,3 +71,17 @@ let rec quote l (t:t) : term =
     let b = quote (l+1) (eval ((var l)::env) b) in
     Pi ((x,i,a),b)
   | Type -> Type
+
+let to_string t = Term.to_string @@ quote 0 t
+
+exception Unification
+
+let rec unify l (t:t) (u:t) =
+  match t, u with
+  | Abs ((_,i),(env,b)), Abs ((_,i'),(env',b')) ->
+    if i <> i' then raise Unification;
+    let b = eval ((var l)::env) b in
+    let b' = eval ((var l)::env') b' in
+    unify (l+1) b b'
+  | Type, Type -> ()
+  | _ -> raise Unification

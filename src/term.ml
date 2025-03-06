@@ -11,3 +11,17 @@ type t =
   | Type (** the type of types *)
 
 and ty = t
+
+let rec to_string vars = function
+  | Abs ((x,i),t) ->
+    let x = icit_pa i x in
+    Printf.sprintf "fun %s -> %s" x (to_string (x::vars) t)
+  | App (t,(i,u)) ->
+    Printf.sprintf "%s %s" (to_string vars t) (icit_pa i (to_string vars u))
+  | Var _ -> "x"
+  | Pi ((x,i,a),_) ->
+    let x = icit_pa i (x ^ " : " ^ to_string vars a) in
+    Printf.sprintf "%s -> %s" x (to_string (x::vars) a)
+  | Type -> "Type"
+
+let to_string = to_string []

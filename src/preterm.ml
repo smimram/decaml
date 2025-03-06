@@ -47,6 +47,7 @@ let pis ?pos args a =
   in
   aux args
 
+(*
 let rec to_string ?(pa=false) e =
   let icit i s =
     match i with
@@ -73,4 +74,4 @@ let rec to_string ?(pa=false) e =
 
 let string_of_decl = function
   | Def (x, v) -> Printf.sprintf "let %s = %s" x (to_string v)
-
+*)
