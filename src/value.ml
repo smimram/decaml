@@ -10,6 +10,9 @@ type t =
   | Pi of (string * icit * ty) * closure
   | Type
 
+  | Nat
+  | Z | S of t option | Ind_nat of t list
+
 and ty = t
 
 and environment = t list
@@ -46,6 +49,10 @@ let rec eval (env:environment) (t:term) =
     Pi ((x,i,a),(env,b))
   | Type ->
     Type
+  | Nat -> Nat
+  | Z -> Z
+  | S -> S None
+  | Ind_nat -> Ind_nat []
 
 (** Apply a value to another *)
 and app (t:t) u =
@@ -71,6 +78,16 @@ let rec quote l (t:t) : term =
     let b = quote (l+1) (eval ((var l)::env) b) in
     Pi ((x,i,a),b)
   | Type -> Type
+  | Nat -> Nat
+  | Z -> Z
+  | S None -> S
+  | S (Some t) -> App (S, (`Explicit, quote l t))
+  | Ind_nat ll ->
+    let rec aux = function
+      | t::ll -> Term.App (aux ll, (`Explicit, quote l t))
+      | [] -> Ind_nat
+    in
+    aux ll
 
 let to_string t = Term.to_string @@ quote 0 t
 

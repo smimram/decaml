@@ -1,4 +1,4 @@
-open Common
+open Extlib
 
 module P = Preterm
 module T = Term
@@ -42,6 +42,7 @@ module Context = struct
 end
 
 let rec infer (ctx:Context.t) (t:preterm) : term * ty =
+  let pos = t.pos in
   match t.desc with
   | Abs ((x,i,a),t) ->
     let a = check ctx a V.Type in
@@ -64,7 +65,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let n, a =
       let rec aux n = function
         | (y,a)::l -> if x = y then n, a else aux (n+1) l
-        | [] -> failwith "error"
+        | [] -> type_error pos "unbound variable: %s" x
       in
       aux 0 ctx.Context.types
     in
@@ -75,6 +76,8 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     Pi ((x,i,a),b), Type
   | Type ->
     Type, Type
+  | Z -> Z, Nat
+  | S -> S, Nat
 
 and check (ctx:Context.t) (t:preterm) (a:ty) : term =
   let t, a' = infer ctx t in

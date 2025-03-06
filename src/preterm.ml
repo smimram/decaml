@@ -1,6 +1,7 @@
 (** Pre-terms are what we get out of the parser. *)
 
 open Common
+open Extlib
 
 (** A variable. *)
 type var = string
@@ -19,6 +20,8 @@ and desc =
   | Var of var
   | Pi of (var * icit * ty) * t
   | Type (** the type of types *)
+
+  | Z | S
 
 and ty = t
 
@@ -48,6 +51,13 @@ let pis ?pos args a =
   aux args
 
 (*
+(** Let declaration. *)
+let letin ?pos x t a u =
+  let pos = Option.value ~default:a.pos pos in
+  mk ~pos (App (mk ~pos (Abs ((x, `Explicit, a), u)), (`Explicit, t)))
+*)
+ 
+(*
 let rec to_string ?(pa=false) e =
   let icit i s =
     match i with
@@ -75,3 +85,9 @@ let rec to_string ?(pa=false) e =
 let string_of_decl = function
   | Def (x, v) -> Printf.sprintf "let %s = %s" x (to_string v)
 *)
+
+let prelude d =
+  let def x t d = (Def (x, mk t))::d in
+  def "zero" Z @@
+  def "suc" S @@
+  d

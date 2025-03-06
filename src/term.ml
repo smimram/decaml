@@ -10,6 +10,9 @@ type t =
   | Pi of (string * icit * ty) * t
   | Type (** the type of types *)
 
+  | Nat
+  | Z | S | Ind_nat
+
 and ty = t
 
 let rec to_string vars = function
@@ -23,5 +26,9 @@ let rec to_string vars = function
     let x = icit_pa i (x ^ " : " ^ to_string vars a) in
     Printf.sprintf "%s -> %s" x (to_string (x::vars) a)
   | Type -> "Type"
+  | Nat -> "Nat"
+  | Z -> "Z"
+  | S -> "S"
+  | Ind_nat -> "Ind_nat"
 
 let to_string = to_string []

@@ -1,1 +1,3 @@
 let id (a : Type) (x : a) = x
+
+let n = zero

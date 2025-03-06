@@ -35,3 +35,4 @@ arg:
 expr:
   | IDENT { mk ~pos:$loc (Var $1) }
   | TYPE { mk ~pos:$loc (Type) }
+  /* | def IN expr { let (f, t) = $1 in mk ~pos:$loc (App (mk ~pos:$loc($1) (Abs ((f, `Explicit, None), $3)), (`Explicit, t))) } */
