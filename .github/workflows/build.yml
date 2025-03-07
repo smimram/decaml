@@ -11,6 +11,8 @@ jobs:
         run: sudo apt-get install ocaml-nox menhir ocaml-dune
       - name: Build
         run: make
+      - name: Test
+        run: make test
     # - name: Upload website artifact
       # uses: actions/upload-pages-artifact@v3
       # with:

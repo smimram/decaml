@@ -5,3 +5,12 @@
 (executable
  (name decaml)
 )
+
+(rule
+ (alias runtest)
+ (deps test.dml)
+ (action
+  (run ./decaml.exe test.dml)
+ )
+)
+       
