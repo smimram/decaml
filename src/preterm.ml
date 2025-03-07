@@ -20,8 +20,9 @@ and desc =
   | Var of var
   | Pi of (var * icit * ty) * t
   | Type (** the type of types *)
+  | Hole
 
-  | Z | S
+  | Nat | Z | S
 
 and ty = t
 
@@ -88,6 +89,7 @@ let string_of_decl = function
 
 let prelude d =
   let def x t d = (Def (x, mk t))::d in
+  def "Nat" Nat @@
   def "zero" Z @@
   def "suc" S @@
   d

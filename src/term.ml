@@ -8,6 +8,7 @@ type t =
   | App of t * (icit * t)
   | Var of int
   | Pi of (string * icit * ty) * t
+  | Meta of int
   | Type (** the type of types *)
 
   | Nat
@@ -26,6 +27,7 @@ let rec to_string vars = function
     let x = icit_pa i (x ^ " : " ^ to_string vars a) in
     Printf.sprintf "%s -> %s" x (to_string (x::vars) a)
   | Type -> "Type"
+  | Meta m -> "?" ^ string_of_int m
   | Nat -> "Nat"
   | Z -> "Z"
   | S -> "S"

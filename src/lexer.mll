@@ -16,9 +16,11 @@ rule token = parse
   | "=" { EQ }
   | "(" { LPAR }
   | ")" { RPAR }
+  | "_" { HOLE }
   | "|" { VBAR }
   | "Type" { TYPE }
   | (['A'-'Z''a'-'z''0'-'9']+ as s) { IDENT s }
+  | "(*"[^'*']*"*)" { token lexbuf }
   | space+ { token lexbuf }
   | "\n" { new_line lexbuf; token lexbuf }
   | eof { EOF }

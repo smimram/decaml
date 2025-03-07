@@ -41,12 +41,18 @@ module Context = struct
   let close ctx (t:value) : V.closure = ctx.environment, V.quote (ctx.level + 1) t
 end
 
+let fresh_meta =
+  let m = ref 0 in
+  fun _ctx : term ->
+    incr m;
+    Meta !m
+
 let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   let pos = t.pos in
   match t.desc with
   | Abs ((x,i,a),t) ->
     let a = check ctx a V.Type in
-    let a = V.eval ctx.Context.environment a in
+    let a = V.eval ctx.environment a in
     let ctx' = Context.bind ctx x a in
     let t, b = infer ctx' t in
     T.Abs ((x,i),t), V.Pi((x,i,a),Context.close ctx b)
@@ -67,19 +73,24 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
         | (y,a)::l -> if x = y then n, a else aux (n+1) l
         | [] -> type_error pos "unbound variable: %s" x
       in
-      aux 0 ctx.Context.types
+      aux 0 ctx.types
     in
     Var n, a
   | Pi ((x,i,a),b) ->
     let a = check ctx a Type in
     let b = check (Context.bind ctx x (V.eval ctx.environment a)) b Type in
     Pi ((x,i,a),b), Type
-  | Type ->
-    Type, Type
+  | Hole ->
+    let t = fresh_meta ctx in
+    let a = V.eval ctx.environment @@ fresh_meta ctx in
+    t, a
+  | Type -> Type, Type
+  | Nat -> Nat, Type
   | Z -> Z, Nat
   | S -> S, Nat
 
 and check (ctx:Context.t) (t:preterm) (a:ty) : term =
+  let pos = t.pos in
   let t, a' = infer ctx t in
-  V.unify ctx.Context.level a' a;
+  if not @@ V.unify ctx.Context.level a' a then type_error pos "expression has type %s but %s expected" (V.to_string a') (V.to_string a);
   t

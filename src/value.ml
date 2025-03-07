@@ -7,6 +7,7 @@ type term = Term.t
 type t =
   | Abs of (string * icit) * closure
   | Var of level * spine (* a variable applied to arguments *)
+  | Meta of meta * spine
   | Pi of (string * icit * ty) * closure
   | Type
 
@@ -21,6 +22,12 @@ and environment = t list
 and spine = (icit * t) list
 
 and closure = environment * term
+
+and meta =
+  {
+    id : int;
+    mutable value : t option;
+  }
 
 (** Create a variable. *)
 let var x = Var (x, [])
@@ -47,8 +54,8 @@ let rec eval (env:environment) (t:term) =
   | Pi ((x,i,a),b) ->
     let a = eval env a in
     Pi ((x,i,a),(env,b))
-  | Type ->
-    Type
+  | Meta m -> Meta ({ id = m; value = None }, [])
+  | Type -> Type
   | Nat -> Nat
   | Z -> Z
   | S -> S None
@@ -63,31 +70,30 @@ and app (t:t) u =
 
 (** Reify a value as a term. *)
 let rec quote l (t:t) : term =
+  let rec app_spine t : spine -> term = function
+    | (i,u)::s -> App (app_spine t s, (i, quote l u))
+    | [] -> t
+  in
+  let rec app_explicit_spine t : t list -> term = function
+    | u::s -> App (app_explicit_spine t s, (`Explicit, quote l u))
+    | [] -> t
+  in
   match t with
   | Abs ((x,i),(env,t)) ->
     let t = quote (l+1) (eval ((var l)::env) t) in
     Abs ((x,i),t)
-  | Var (x,s) ->
-    let rec aux : spine -> term = function
-      | (i,t)::s -> App (aux s, (i, quote l t))
-      | [] -> Var x
-    in
-    aux s
+  | Var (x,s) -> app_spine (Var x) s
   | Pi ((x,i,a),(env,b)) ->
     let a = quote l a in
     let b = quote (l+1) (eval ((var l)::env) b) in
     Pi ((x,i,a),b)
+  | Meta (m, s) -> app_spine (Meta m.id) s
   | Type -> Type
   | Nat -> Nat
   | Z -> Z
   | S None -> S
   | S (Some t) -> App (S, (`Explicit, quote l t))
-  | Ind_nat ll ->
-    let rec aux = function
-      | t::ll -> Term.App (aux ll, (`Explicit, quote l t))
-      | [] -> Ind_nat
-    in
-    aux ll
+  | Ind_nat s -> app_explicit_spine Ind_nat s
 
 let to_string t = Term.to_string @@ quote 0 t
 
@@ -102,3 +108,7 @@ let rec unify l (t:t) (u:t) =
     unify (l+1) b b'
   | Type, Type -> ()
   | _ -> raise Unification
+
+let unify l t u =
+  try unify l t u; true
+  with Unification -> false
