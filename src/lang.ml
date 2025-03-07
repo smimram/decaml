@@ -34,7 +34,7 @@ module Context = struct
     {
       environment = (V.var ctx.level)::ctx.environment;
       level = ctx.level + 1;
-      types = (x,a) :: ctx.types;
+      types = (x,a)::ctx.types;
     }
 
   (* close : (Γ : Con) → Val (Γ, x : A) B → Closure Γ A B *)
@@ -55,7 +55,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let a = V.eval ctx.environment a in
     let ctx' = Context.bind ctx x a in
     let t, b = infer ctx' t in
-    T.Abs ((x,i),t), V.Pi((x,i,a),Context.close ctx b)
+    T.Abs ((x,i),t), V.Pi((x,i,a), Context.close ctx b)
   | App (t,(i,u)) ->
     let tpos = t.pos in
     let t, c = infer ctx t in
@@ -71,11 +71,12 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   | Var x ->
     let n, a =
       let rec aux n = function
-        | (y,a)::l -> if x = y then n, a else aux (n+1) l
+        | (y,a)::l -> if x = y then (n,a) else aux (n+1) l
         | [] -> type_error pos "unbound variable: %s" x
       in
       aux 0 ctx.types
     in
+    Printf.printf "n for %s is %d [%s]\n%!" x n (String.concat ", " @@ List.map (fun (x,a) -> x ^ " : " ^ V.to_string a) ctx.types);
     Var n, a
   | Pi ((x,i,a),b) ->
     let a = check ctx a Type in

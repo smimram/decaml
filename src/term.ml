@@ -16,16 +16,16 @@ type t =
 
 and ty = t
 
-let rec to_string vars = function
+let rec to_string l vars = function
   | Abs ((x,i),t) ->
     let x = icit_pa i x in
-    Printf.sprintf "fun %s -> %s" x (to_string (x::vars) t)
+    Printf.sprintf "fun %s -> %s" x (to_string l (x::vars) t)
   | App (t,(i,u)) ->
-    Printf.sprintf "%s %s" (to_string vars t) (icit_pa i (to_string vars u))
-  | Var _ -> "x"
+    Printf.sprintf "%s %s" (to_string l vars t) (icit_pa i (to_string l vars u))
+  | Var n -> Printf.sprintf "x#%d" n
   | Pi ((x,i,a),_) ->
-    let x = icit_pa i (x ^ " : " ^ to_string vars a) in
-    Printf.sprintf "%s -> %s" x (to_string (x::vars) a)
+    let x = icit_pa i (x ^ " : " ^ to_string l vars a) in
+    Printf.sprintf "%s -> %s" x (to_string l (x::vars) a)
   | Type -> "Type"
   | Meta m -> "?" ^ string_of_int m
   | Nat -> "Nat"
@@ -33,4 +33,4 @@ let rec to_string vars = function
   | S -> "S"
   | Ind_nat -> "Ind_nat"
 
-let to_string = to_string []
+let to_string = to_string 0 []

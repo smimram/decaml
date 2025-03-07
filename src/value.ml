@@ -40,6 +40,9 @@ let fresh_var_name =
     Hashtbl.replace h x (n+1);
     x ^ "#" ^ string_of_int n
 
+(** Replace metavariables by their value. *)
+let force (t:t) = t (* TODO *)
+
 (** Evaluate a term to a value. *)
 let rec eval (env:environment) (t:term) =
   match t with
@@ -80,14 +83,16 @@ let rec quote l (t:t) : term =
   in
   match t with
   | Abs ((x,i),(env,t)) ->
-    let t = quote (l+1) (eval ((var l)::env) t) in
+    let t = quote (l+1) @@ eval ((var l)::env) t in
     Abs ((x,i),t)
-  | Var (x,s) -> app_spine (Var x) s
+  | Var (x,s) ->
+    app_spine (Var (l-x-1)) s
   | Pi ((x,i,a),(env,b)) ->
     let a = quote l a in
-    let b = quote (l+1) (eval ((var l)::env) b) in
+    let b = quote (l+1) @@ eval ((var l)::env) b in
     Pi ((x,i,a),b)
-  | Meta (m, s) -> app_spine (Meta m.id) s
+  | Meta (m, s) ->
+    app_spine (Meta m.id) s
   | Type -> Type
   | Nat -> Nat
   | Z -> Z
@@ -99,6 +104,7 @@ let to_string t = Term.to_string @@ quote 0 t
 
 exception Unification
 
+(** Unify two values. *)
 let rec unify l (t:t) (u:t) =
   match t, u with
   | Abs ((_,i),(env,b)), Abs ((_,i'),(env',b')) ->

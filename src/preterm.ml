@@ -58,17 +58,11 @@ let letin ?pos x t a u =
   mk ~pos (App (mk ~pos (Abs ((x, `Explicit, a), u)), (`Explicit, t)))
 *)
  
-(*
 let rec to_string ?(pa=false) e =
-  let icit i s =
-    match i with
-    | `Explicit -> "("^s^")"
-    | `Implicit -> "{"^s^"}"
-  in
   let pa s = if pa then "("^s^")" else s in
   match e.desc with
   | Abs ((x,i,t), e) ->
-    let arg = icit i (x ^ " : " ^ to_string t) in
+    let arg = icit_pa i (x ^ " : " ^ to_string t) in
     pa (Printf.sprintf "fun %s -> %s" arg (to_string e))
   | App (f,(i,e)) ->
     let e =
@@ -78,11 +72,16 @@ let rec to_string ?(pa=false) e =
     in
     pa (Printf.sprintf "%s %s" (to_string f) e)
   | Pi ((x,i,t),e) ->
-    let arg = icit i (x ^ " : " ^ to_string t) in
-    pa (Printf.sprintf "%s -> %s" arg (to_string e))
+    let arg = icit_pa i (x ^ " : " ^ to_string t) in
+    pa (Printf.sprintf "Π %s -> %s" arg (to_string e))
   | Var x -> x
+  | Hole -> "_"
   | Type -> "Type"
+  | Nat -> "Nat"
+  | Z -> "Z"
+  | S -> "S"
 
+(*
 let string_of_decl = function
   | Def (x, v) -> Printf.sprintf "let %s = %s" x (to_string v)
 *)

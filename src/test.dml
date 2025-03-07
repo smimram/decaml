@@ -1,3 +1,7 @@
-let id (a : Type) (x : a) = x
+(* let a = Nat *)
 
-let n = id Nat zero
+(* let id (a : Type) (x : a) = x *)
+
+let idNat (x : Nat) = x
+
+(* let n = id Nat zero *)
