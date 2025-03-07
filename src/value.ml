@@ -11,8 +11,8 @@ type t =
   | Pi of (string * icit * ty) * closure
   | Type
 
-  | Nat
-  | Z | S of t option | Ind_nat of t list
+  | Unit | U
+  | Nat | Z | S of t option | Ind_nat of t list
 
 and ty = t
 
@@ -62,6 +62,8 @@ let rec eval (env:environment) (t:term) =
     Pi ((x,i,a),(env,b))
   | Meta m -> Meta ({ id = m; value = None }, [])
   | Type -> Type
+  | Unit -> Unit
+  | U -> U
   | Nat -> Nat
   | Z -> Z
   | S -> S None
@@ -97,13 +99,15 @@ let rec quote l (t:t) : term =
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type
+  | Unit -> Unit
+  | U -> U
   | Nat -> Nat
   | Z -> Z
   | S None -> S
   | S (Some t) -> App (S, (`Explicit, quote l t))
   | Ind_nat s -> app_explicit_spine Ind_nat s
 
-let to_string t = Term.to_string @@ quote 0 t
+let to_string ?(vars=[]) t = Term.to_string ~vars @@ quote 0 t
 
 exception Unification
 

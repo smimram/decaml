@@ -1,15 +1,18 @@
 (** Modules are sequences of declarations. *)
 
-module T = Preterm
+module P = Preterm
+module T = Term
 
-open T
+open P
 
-type t =
-  | Def of (var * T.t)
+type decl =
+  | Def of (var * P.t)
+
+type t = decl list
 
 let prelude d =
   let def x t d = (Def (x, mk t))::d in
-  def "Nat" Nat @@
-  def "zero" Z @@
-  def "suc" S @@
+  def "nat" Nat @@
+  def "Z" Z @@
+  def "S" S @@
   d

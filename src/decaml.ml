@@ -33,9 +33,11 @@ let () =
       (fun ctx decl ->
          match decl with
          | Module.Def (x,t) ->
-           let _t, a = Lang.infer ctx t in
-           Printf.printf "defined %s : %s\n%!" x (Value.to_string a);
-           Lang.Context.bind ctx x a
+           let t, a = Lang.infer ctx t in
+           Printf.printf "defined %s : %s\n%!" x (Value.to_string ~vars:(List.map fst ctx.types) a);
+           Printf.printf "        %s = %s\n%!" x (Term.to_string ~vars:(List.map fst ctx.types) t);
+           (* Lang.Context.bind ctx x a *)
+           Lang.Context.define ctx x (Value.eval ctx.environment t) a
       ) Lang.Context.empty decls
   with
   | Lang.Type_error (pos, e) ->

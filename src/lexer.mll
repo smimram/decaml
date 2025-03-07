@@ -9,6 +9,9 @@ let utf8 ?(n=1) lexbuf =
 
 let space = ' ' | '\t' | '\r'
 
+let first_char = ['_''A'-'Z''a'-'z''0'-'9']
+let char = first_char | ['0'-'9']
+
 rule token = parse
   | "let" { LET }
   | "in" { IN }
@@ -18,8 +21,8 @@ rule token = parse
   | ")" { RPAR }
   | "_" { HOLE }
   | "|" { VBAR }
-  | "Type" { TYPE }
-  | (['A'-'Z''a'-'z''0'-'9']+ as s) { IDENT s }
+  | "type" { TYPE }
+  | (first_char char* as s) { IDENT s }
   | "(*"[^'*']*"*)" { token lexbuf }
   | space+ { token lexbuf }
   | "\n" { new_line lexbuf; token lexbuf }

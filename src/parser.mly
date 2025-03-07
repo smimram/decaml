@@ -10,7 +10,7 @@ open Module
 %token EOF
 
 %start main
-%type<Module.t list> main
+%type<Module.t> main
 %%
 
 main:

@@ -97,7 +97,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
       in
       aux 0 ctx.types
     in
-    Printf.printf "n for %s is %d [%s]\n%!" x n (String.concat ", " @@ List.map (fun (x,a) -> x ^ " : " ^ V.to_string a) ctx.types);
+    (* Printf.printf "n for %s is %d [%s]\n%!" x n (String.concat ", " @@ List.map (fun (x,a) -> x ^ " : " ^ V.to_string a) ctx.types); *)
     Var n, a
   | Pi ((x,i,a),b) ->
     let a = check ctx a Type in
