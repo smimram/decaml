@@ -19,18 +19,18 @@ type t =
 
 and ty = t
 
-let rec to_string_base vars = function
+let rec to_string vars = function
   | Let (x,a,t,u) ->
-    Printf.sprintf "let %s : %s = %s in\n%s" x (to_string_base vars a) (to_string_base vars t) (to_string_base vars u)
+    Printf.sprintf "let %s : %s = %s in\n%s" x (to_string vars a) (to_string vars t) (to_string vars u)
   | Abs ((x,i),t) ->
     let x = icit_pa i x in
-    Printf.sprintf "fun %s -> %s" x (to_string_base(x::vars) t)
+    Printf.sprintf "fun %s -> %s" x (to_string(x::vars) t)
   | App (t,(i,u)) ->
-    Printf.sprintf "%s %s" (to_string_base vars t) (icit_pa i (to_string_base vars u))
+    Printf.sprintf "%s %s" (to_string vars t) (icit_pa i (to_string vars u))
   | Var n -> if n < 0 then Printf.sprintf "x#%d" n else List.nth vars n
   | Pi ((x,i,a),_) ->
-    let x = icit_pa i (x ^ " : " ^ to_string_base vars a) in
-    Printf.sprintf "%s -> %s" x (to_string_base (x::vars) a)
+    let x = icit_pa i (x ^ " : " ^ to_string vars a) in
+    Printf.sprintf "%s -> %s" x (to_string (x::vars) a)
   | Type -> "type"
   | Meta m -> "?" ^ string_of_int m
   | Unit -> "unit"
@@ -40,4 +40,4 @@ let rec to_string_base vars = function
   | S -> "S"
   | Ind_nat -> "Ind_nat"
 
-let to_string ?(vars=[]) = to_string_base vars
+let to_string ?(vars=[]) = to_string vars

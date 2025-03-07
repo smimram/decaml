@@ -23,6 +23,7 @@ and desc =
   | Type (** the type of types *)
   | Hole
 
+  | Unit | U
   | Nat | Z | S
 
 and ty = t
@@ -77,8 +78,10 @@ let rec to_string ?(pa=false) e =
     pa (Printf.sprintf "Π %s -> %s" arg (to_string e))
   | Var x -> x
   | Hole -> "_"
-  | Type -> "Type"
-  | Nat -> "Nat"
+  | Type -> "type"
+  | Unit -> "unit"
+  | U -> "()"
+  | Nat -> "nat"
   | Z -> "Z"
   | S -> "S"
 

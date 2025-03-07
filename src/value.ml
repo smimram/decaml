@@ -1,4 +1,5 @@
 open Common
+open Extlib
 
 type level = int
 
@@ -70,11 +71,11 @@ let rec eval (env:environment) (t:term) =
   | Ind_nat -> Ind_nat []
 
 (** Apply a value to another *)
-and app (t:t) u =
+and app (t:t) (i,u) =
   match t with
-  (* | Abs (_, _) -> _ *)
-  | Var (x,s) -> Var (x, u::s)
-  | _ -> assert false
+  | Abs ((_,i'), (env,t)) -> assert (i = i'); eval (u::env) t
+  | Var (x,s) -> Var (x, (i,u)::s)
+  | _ -> failwith "TODO: unhandled app"
 
 (** Reify a value as a term. *)
 let rec quote l (t:t) : term =
@@ -120,6 +121,7 @@ let rec unify l (t:t) (u:t) =
     let b' = eval ((var l)::env') b' in
     unify (l+1) b b'
   | Type, Type -> ()
+  | Nat, Nat -> ()
   | _ -> raise Unification
 
 let unify l t u =

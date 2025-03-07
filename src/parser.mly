@@ -42,4 +42,5 @@ sexpr:
   | IDENT { mk ~pos:$loc (Var $1) }
   | TYPE { mk ~pos:$loc Type }
   | HOLE { mk ~pos:$loc Hole }
+  | LPAR RPAR {mk ~pos:$loc U }
   /* | def IN expr { let (f, t) = $1 in mk ~pos:$loc (Let (f, None, t, $3)) } */

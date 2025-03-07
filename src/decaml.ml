@@ -34,8 +34,8 @@ let () =
          match decl with
          | Module.Def (x,t) ->
            let t, a = Lang.infer ctx t in
-           Printf.printf "defined %s : %s\n%!" x (Value.to_string ~vars:(List.map fst ctx.types) a);
-           Printf.printf "        %s = %s\n%!" x (Term.to_string ~vars:(List.map fst ctx.types) t);
+           Printf.printf "%s : %s\n%!" x (Value.to_string ~vars:(List.map fst ctx.types) a);
+           Printf.printf "%s = %s\n%!" x (Term.to_string ~vars:(List.map fst ctx.types) t);
            (* Lang.Context.bind ctx x a *)
            Lang.Context.define ctx x (Value.eval ctx.environment t) a
       ) Lang.Context.empty decls

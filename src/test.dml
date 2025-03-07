@@ -1,8 +1,12 @@
+let u = ()
+
 let id_nat (x : nat) = x
 
-let id {a : type} (x : a) = x
+let id (a : type) (x : a) = x
 
-(* let n = id Nat zero *)
+let n = id nat Z
+
+let id {a : type} (x : a) = x
 
 (*
 Local Variables: 

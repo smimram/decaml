@@ -108,6 +108,8 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let a = V.eval ctx.environment @@ fresh_meta ctx in
     t, a
   | Type -> Type, Type
+  | Unit -> Unit, Type
+  | U -> U, Unit
   | Nat -> Nat, Type
   | Z -> Z, Nat
   | S -> S, Nat

@@ -12,6 +12,7 @@ type t = decl list
 
 let prelude d =
   let def x t d = (Def (x, mk t))::d in
+  def "unit" Unit @@
   def "nat" Nat @@
   def "Z" Z @@
   def "S" S @@
