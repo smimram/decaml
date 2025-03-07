@@ -25,14 +25,14 @@ let () =
         pos.Lexing.pos_lnum
         (pos.Lexing.pos_cnum - pos.Lexing.pos_bol)
   in
-  let decls = Preterm.prelude decls in
+  let decls = Module.prelude decls in
   close_in ic;
   try
     ignore @@
     List.fold_left
       (fun ctx decl ->
          match decl with
-         | Preterm.Def (x,t) ->
+         | Module.Def (x,t) ->
            let _t, a = Lang.infer ctx t in
            Printf.printf "defined %s : %s\n%!" x (Value.to_string a);
            Lang.Context.bind ctx x a

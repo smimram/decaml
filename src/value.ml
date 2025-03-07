@@ -46,6 +46,9 @@ let force (t:t) = t (* TODO *)
 (** Evaluate a term to a value. *)
 let rec eval (env:environment) (t:term) =
   match t with
+  | Let (_,_,t,u) ->
+    let t = eval env t in
+    eval (t::env) u
   | Abs ((x,i),u) ->
     Abs ((x,i),(env,u))
   | App (t,(i,u)) ->

@@ -4,6 +4,7 @@ open Common
 
 (** An expression. *)
 type t =
+  | Let of (string * ty * t * t)
   | Abs of (string * icit) * t (** λ-abstraction *)
   | App of t * (icit * t)
   | Var of int
@@ -17,6 +18,8 @@ type t =
 and ty = t
 
 let rec to_string l vars = function
+  | Let (x,a,t,u) ->
+    Printf.sprintf "let %s : %s = %s in\n%s" x (to_string l vars a) (to_string l vars t) (to_string l vars u)
   | Abs ((x,i),t) ->
     let x = icit_pa i x in
     Printf.sprintf "fun %s -> %s" x (to_string l (x::vars) t)

@@ -15,6 +15,7 @@ type t =
 
 (** The contents of an expression. *)
 and desc =
+  | Let of var * ty option * t * t
   | Abs of (var * icit * ty) * t (** λ-abstraction *)
   | App of t * (icit * t)
   | Var of var
@@ -25,9 +26,6 @@ and desc =
   | Nat | Z | S
 
 and ty = t
-
-and decl =
-  | Def of (var * t)
 
 let mk ?pos desc =
   let pos = Option.value ~default:Pos.dummy pos in
@@ -61,6 +59,9 @@ let letin ?pos x t a u =
 let rec to_string ?(pa=false) e =
   let pa s = if pa then "("^s^")" else s in
   match e.desc with
+  | Let (x,a,t,u) ->
+    let a = match a with Some a -> " : " ^ to_string a | None -> "" in
+    Printf.sprintf "let %s%s = %s in\n%s" x a (to_string t) (to_string u)
   | Abs ((x,i,t), e) ->
     let arg = icit_pa i (x ^ " : " ^ to_string t) in
     pa (Printf.sprintf "fun %s -> %s" arg (to_string e))
@@ -85,10 +86,3 @@ let rec to_string ?(pa=false) e =
 let string_of_decl = function
   | Def (x, v) -> Printf.sprintf "let %s = %s" x (to_string v)
 *)
-
-let prelude d =
-  let def x t d = (Def (x, mk t))::d in
-  def "Nat" Nat @@
-  def "zero" Z @@
-  def "suc" S @@
-  d

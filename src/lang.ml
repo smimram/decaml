@@ -37,6 +37,13 @@ module Context = struct
       types = (x,a)::ctx.types;
     }
 
+  let define ctx x t a =
+    {
+      environment = t::ctx.environment;
+      level = ctx.level + 1;
+      types = (x,a)::ctx.types;
+    }
+
   (* close : (Γ : Con) → Val (Γ, x : A) B → Closure Γ A B *)
   let close ctx (t:value) : V.closure = ctx.environment, V.quote (ctx.level + 1) t
 end
@@ -50,6 +57,20 @@ let fresh_meta =
 let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   let pos = t.pos in
   match t.desc with
+  | Let (x,a,t,u) ->
+    let t, a =
+      match a with
+      | Some a ->
+        let a = V.eval ctx.environment @@ check ctx a V.Type in
+        let t = check ctx t a in
+        t, a
+      | None ->
+        infer ctx t
+    in
+    let u, b = infer (Context.define ctx x (V.eval ctx.environment t) a) u in
+    (* TODO: check this quote *)
+    let a = V.quote ctx.level a in
+    Let (x,a,t,u), b
   | Abs ((x,i,a),t) ->
     let a = check ctx a V.Type in
     let a = V.eval ctx.environment a in

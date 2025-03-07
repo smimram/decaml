@@ -1,5 +1,6 @@
 %{
 open Preterm
+open Module
 %}
 
 %token LET IN EQ COLON HOLE
@@ -9,7 +10,7 @@ open Preterm
 %token EOF
 
 %start main
-%type<Preterm.decl list> main
+%type<Module.t list> main
 %%
 
 main:
