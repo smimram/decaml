@@ -19,8 +19,9 @@ rule token = parse
   | "=" { EQ }
   | "(" { LPAR }
   | ")" { RPAR }
+  | "{" { LACC }
+  | "}" { RACC }
   | "_" { HOLE }
-  | "|" { VBAR }
   | "type" { TYPE }
   | (first_char char* as s) { IDENT s }
   | "(*"[^'*']*"*)" { token lexbuf }
