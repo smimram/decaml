@@ -57,13 +57,14 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let t, b = infer ctx' t in
     T.Abs ((x,i),t), V.Pi((x,i,a),Context.close ctx b)
   | App (t,(i,u)) ->
+    let tpos = t.pos in
     let t, c = infer ctx t in
     let a,(env,b) =
       match c with
       | Pi ((_,i',a),(env,b)) ->
         if i <> i' then failwith "TODO: support implicit parameters";
         a,(env,b)
-      | _ -> failwith "function expected"
+      | _ -> type_error tpos "term has type %s but a function was expected" @@ V.to_string c
     in
     let u = check ctx u a in
     App (t,(i,u)), V.eval ((V.eval ctx.environment u)::env) b
