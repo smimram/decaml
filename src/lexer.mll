@@ -1,15 +1,12 @@
 {
 open Lexing
 open Parser
-
-let utf8 ?(n=1) lexbuf =
-  let pos = lexbuf.lex_curr_p in
-  lexbuf.lex_curr_p <- { pos with pos_bol = pos.pos_bol + n }
+(* open LexingUtils *)
 }
 
 let space = ' ' | '\t' | '\r'
 
-let first_char = ['_''A'-'Z''a'-'z''0'-'9']
+let first_char = ['_''A'-'Z''a'-'z']
 let char = first_char | ['0'-'9']
 
 rule token = parse
@@ -23,6 +20,7 @@ rule token = parse
   | "}" { RACC }
   | "_" { HOLE }
   | "type" { TYPE }
+  | (['0'-'9']+ as n) { INT (Printf.printf "int %s\n" n; int_of_string n) }
   | (first_char char* as s) { IDENT s }
   | "(*"[^'*']*"*)" { token lexbuf }
   | space+ { token lexbuf }

@@ -7,6 +7,7 @@ open Module
 %token LPAR RPAR LACC RACC
 %token TYPE
 %token<string> IDENT
+%token<int> INT
 %token EOF
 
 %start main
@@ -42,5 +43,6 @@ sexpr:
   | IDENT { mk ~pos:$loc (Var $1) }
   | TYPE { mk ~pos:$loc Type }
   | HOLE { mk ~pos:$loc Hole }
+  | INT { nat ~pos:$loc $1 }
   | LPAR RPAR {mk ~pos:$loc U }
   /* | def IN expr { let (f, t) = $1 in mk ~pos:$loc (Let (f, None, t, $3)) } */

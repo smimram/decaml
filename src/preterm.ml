@@ -50,6 +50,11 @@ let pis ?pos args a =
   in
   aux args
 
+let rec nat ?pos n =
+  if n < 0 then failwith "natural numbers must be positive"
+  else if n = 0 then mk ?pos Z
+  else mk ?pos (App (mk ?pos S, (`Explicit, nat ?pos (n-1))))
+
 (*
 (** Let declaration. *)
 let letin ?pos x t a u =

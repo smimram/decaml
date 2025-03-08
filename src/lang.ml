@@ -112,7 +112,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   | U -> U, Unit
   | Nat -> Nat, Type
   | Z -> Z, Nat
-  | S -> S, Nat
+  | S -> S, V.arr Nat Nat
 
 and check (ctx:Context.t) (t:preterm) (a:ty) : term =
   let pos = t.pos in

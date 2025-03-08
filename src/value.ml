@@ -33,6 +33,9 @@ and meta =
 (** Create a variable. *)
 let var x = Var (x, [])
 
+(** Create a (non-dependent) arrow. *)
+let arr a b = Pi (("_", `Explicit, a), ([],b))
+
 (** Generate a fresh variable name. *)
 let fresh_var_name =
   let h = Hashtbl.create 100 in
@@ -75,6 +78,7 @@ and app (t:t) (i,u) =
   match t with
   | Abs ((_,i'), (env,t)) -> assert (i = i'); eval (u::env) t
   | Var (x,s) -> Var (x, (i,u)::s)
+  | S None -> S (Some u)
   | _ -> failwith "TODO: unhandled app"
 
 (** Reify a value as a term. *)

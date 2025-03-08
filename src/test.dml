@@ -1,10 +1,14 @@
 let u = ()
 
+let ten = 3
+
 let id_nat (x : nat) = x
 
 let id (a : type) (x : a) = x
 
 let n = id nat Z
+
+(* let n = id _ Z *)
 
 let id {a : type} (x : a) = x
 
