@@ -9,7 +9,8 @@ type t =
   | App of t * (icit * t)
   | Var of int
   | Pi of (string * icit * ty) * t
-  | Meta of int
+  | Meta of meta
+  | InsertedMeta of meta * [`Bound | `Defined] list
   | Type (** the type of types *)
 
   | Unit | U
@@ -18,6 +19,8 @@ type t =
   | Z | S | Ind_nat
 
 and ty = t
+
+and meta = int
 
 let rec to_string vars = function
   | Let (x,a,t,u) ->
@@ -33,6 +36,7 @@ let rec to_string vars = function
     Printf.sprintf "%s -> %s" x (to_string (x::vars) a)
   | Type -> "type"
   | Meta m -> "?" ^ string_of_int m
+  | InsertedMeta (m,_) -> "?" ^ string_of_int m
   | Unit -> "unit"
   | U -> "()"
   | Nat -> "nat"

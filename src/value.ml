@@ -32,6 +32,18 @@ and meta =
 
 type value = t
 
+let metavariables = Dynarray.create ()
+
+(** Generate a fresh metavariable. *)
+let fresh_meta () =
+  let m = { id = Dynarray.length metavariables; value = None } in
+  Dynarray.add_last metavariables m;
+  m
+
+(** Get metavariable with given id. *)
+let get_meta id =
+  Dynarray.get metavariables id
+
 module IntMap = Map.Make(Int)
 
 (** A partial renaming from Γ to Δ. *)
@@ -56,9 +68,6 @@ let fresh_var_name =
     Hashtbl.replace h x (n+1);
     x ^ "#" ^ string_of_int n
 
-(** Replace metavariables by their value. *)
-let force (t:t) = t (* TODO *)
-
 (** Evaluate a term to a value. *)
 let rec eval (env:environment) (t:term) =
   match t with
@@ -76,7 +85,16 @@ let rec eval (env:environment) (t:term) =
   | Pi ((x,i,a),b) ->
     let a = eval env a in
     Pi ((x,i,a),(env,b))
-  | Meta m -> Meta ({ id = m; value = None }, [])
+  | Meta m -> Meta (get_meta m, [])
+  | InsertedMeta (m, bds) ->
+    let m = get_meta m in
+    let t =
+      match m.value with
+      | Some t -> t
+      | None -> Meta (m, [])
+    in
+    let s = List.filter_map2 (fun t d -> if d = `Defined then Some (`Explicit, t) else None) env bds in
+    app_spine t s
   | Type -> Type
   | Unit -> Unit
   | U -> U
@@ -85,13 +103,25 @@ let rec eval (env:environment) (t:term) =
   | S -> S None
   | Ind_nat -> Ind_nat []
 
-(** Apply a value to another *)
+(** Apply a value to another. *)
 and app (t:t) (i,u) =
   match t with
   | Abs ((_,i'), (env,t)) -> assert (i = i'); eval (u::env) t
   | Var (x,s) -> Var (x, (i,u)::s)
+  | Meta (m,s) -> Meta (m,(i,u)::s)
   | S None -> S (Some u)
   | _ -> failwith "TODO: unhandled app"
+
+(** Apply a value to a spine. *)
+and app_spine (t:value) = function
+  | u::s -> app (app_spine t s) u
+  | [] -> t
+
+(** Replace metavariables by their value. *)
+let rec force = function
+  | Meta ({ value = Some t; _ }, s) ->
+    force (app_spine t s)
+  | t -> t
 
 (** Reify a value as a term. *)
 let rec quote l (t:t) : term =

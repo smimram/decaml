@@ -9,6 +9,17 @@ module List = struct
       | [] -> raise Not_found
     in
     aux 0 l
+
+  let rec filter_map2 f l1 l2 =
+    match l1, l2 with
+    | x1::l1, x2::l2 ->
+      (
+        match f x1 x2 with
+        | Some y -> y::(filter_map2 f l1 l2)
+        | None -> filter_map2 f l1 l2
+      )
+    | [], [] -> []
+    | _ -> assert false
 end
 
 (** Positions in the source code. *)

@@ -15,44 +15,52 @@ exception Type_error of Pos.t * string
 
 let type_error pos = Printf.ksprintf (fun s -> raise (Type_error (pos, s)))
 
+(** Typing and evaluation contexts. *)
 module Context = struct
+
+  (** The contexts for type inference. *)
   type t =
     {
-      environment : V.environment;
-      level : int;
-      types : (string * V.ty) list;
+      environment : V.environment; (** the evaluation environment *)
+      level : int; (** level for creating fresh variables for abstractions *)
+      types : (string * V.ty) list; (** the typing environment *)
+      bds : [`Bound | `Defined] list; (** whether variables of the environment are defined or bound (this is used for metavariables which only depend on bound variables) *)
     }
 
+  (** Empty context. *)
   let empty =
     {
       environment = [];
       level = 0;
       types = [];
+      bds = [];
     }
 
+  (** Declare a bound variable of given type. *)
   let bind ctx x a =
     {
       environment = (V.var ctx.level)::ctx.environment;
       level = ctx.level + 1;
       types = (x,a)::ctx.types;
+      bds = `Bound::ctx.bds;
     }
 
+  (** Define a term to a given value and type. *)
   let define ctx x t a =
     {
       environment = t::ctx.environment;
       level = ctx.level + 1;
       types = (x,a)::ctx.types;
+      bds = `Defined::ctx.bds;
     }
 
   (* close : (Γ : Con) → Val (Γ, x : A) B → Closure Γ A B *)
   let close ctx (t:value) : V.closure = ctx.environment, V.quote (ctx.level + 1) t
 end
 
-let fresh_meta =
-  let m = ref 0 in
-  fun _ctx : term ->
-    incr m;
-    Meta !m
+let fresh_meta (ctx:Context.t) =
+  let m = Value.fresh_meta () in
+  InsertedMeta (m.id, ctx.bds)
 
 let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   let pos = t.pos in
