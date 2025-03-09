@@ -6,7 +6,7 @@ let ten = 10
 
 let id_nat (x : nat) = x
 
-(* let id_nat : nat -> nat = fun x -> x *)
+let id_nat : nat -> nat = fun x -> x
 
 let id (a : type) (x : a) = x
 

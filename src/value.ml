@@ -199,6 +199,12 @@ let rec unify l (t:t) (u:t) =
     let b = eval ((var l)::env) b in
     let b' = eval ((var l)::env') b' in
     unify (l+1) b b'
+  | Pi ((_,i,a),(env,b)), Pi ((_,i',a'),(env',b')) ->
+    unify_check (i = i');
+    unify l a a';
+    let b = eval ((var l)::env) b in
+    let b' = eval ((var l)::env') b' in
+    unify (l+1) b b'
   | Type, Type -> ()
   | Nat, Nat -> ()
   | Meta (m,s), Meta (m',s') when m.id = m'.id -> unify_spines l s s'

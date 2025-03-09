@@ -39,6 +39,7 @@ args:
 arg:
   | LPAR x=IDENT a=opttype RPAR { (x, `Explicit, a) }
   | LACC x=IDENT a=opttype RACC { (x, `Implicit, a) }
+  | x=IDENT { (x, `Explicit, None) }
 
 opttype:
   | COLON expr { Some $2 }
