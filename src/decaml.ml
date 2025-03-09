@@ -43,5 +43,5 @@ let () =
       ) Lang.Context.empty decls
   with
   | Lang.Type_error (pos, e) ->
-    Printf.printf "Type error at %s: %s\n%!" (Pos.to_string pos) e;
+    Printf.printf "Type error at %s:\n%s\n%!" (Pos.to_string pos) e;
     exit 1

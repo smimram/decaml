@@ -32,6 +32,33 @@ and meta =
 
 type value = t
 
+(*
+(** Simple string representation. For debugging purposes only, otherwise use [to_string] below. *)
+let rec to_string_simple ?(pa=false) t =
+  let pa s = if pa then "(" ^ s ^ ")" else s in
+  let icit i t = match i with `Implicit -> "{" ^ to_string_simple t ^ "}" | `Explicit -> to_string_simple ~pa:true t in
+  let spine s = if s = [] then "" else " " ^ String.concat " " @@ List.rev_map (fun (i,t) -> icit i t) s in
+  match t with
+  | Abs ((x,_i),(_env,_t)) -> pa @@ Printf.sprintf "fun (%s) -> _" x
+  | Var (x,_i) -> "x" ^ string_of_int x
+  | Meta (m,s) ->
+    let m =
+      match m.value with
+      | Some t -> to_string_simple ~pa:true t
+      | None -> "?" ^ string_of_int m.id
+    in
+    m ^ spine s
+  | Pi ((x,_,a),_) -> pa @@ Printf.sprintf "(%s : %s) => _" x (to_string_simple a)
+  | Type -> "type"
+  | Unit -> "unit"
+  | U -> "()"
+  | Nat -> "nat"
+  | Ind_nat s -> pa ("ind_nat" ^ spine (List.map (fun t -> `Explicit, t) s))
+  | Z -> "Z"
+  | S None -> "S"
+  | S (Some t) -> pa ("S " ^ to_string_simple ~pa:true t)
+*)
+
 let metavariables = Dynarray.create ()
 
 (** Generate a fresh metavariable. *)
@@ -93,7 +120,7 @@ let rec eval (env:environment) (t:term) =
       | Some t -> t
       | None -> Meta (m, [])
     in
-    let s = List.filter_map2 (fun t d -> if d = `Defined then Some (`Explicit, t) else None) env bds in
+    let s = List.filter_map2 (fun t d -> if d = `Bound then Some (`Explicit, t) else None) env bds in
     app_spine t s
   | Type -> Type
   | Unit -> Unit
@@ -133,7 +160,7 @@ let rec quote l (t:t) : term =
     | u::s -> App (app_explicit_spine t s, (`Explicit, quote l u))
     | [] -> t
   in
-  match t with
+  match force t with
   | Abs ((x,i),(env,t)) ->
     let t = quote (l+1) @@ eval ((var l)::env) t in
     Abs ((x,i),t)
@@ -155,6 +182,12 @@ let rec quote l (t:t) : term =
   | Ind_nat s -> app_explicit_spine Ind_nat s
 
 let to_string ?(vars=[]) t = Term.to_string ~vars @@ quote 0 t
+
+let string_of_meta vars m =
+  let m = get_meta m in
+  match m.value with
+  | Some t -> to_string ~vars t
+  | None -> "?" ^ string_of_int m.id
 
 exception Unification
 
@@ -181,6 +214,7 @@ and unify_spines l s s' =
 
 (** Given a context Γ, make sure that a meta-variable ?α applied to the spine s equals to a term t. *)
 and unify_solve l m s t =
+  (* Printf.printf "***solve ?%d\n" m.id; *)
   (* From Γ and the spine, we construct a partial renaming from Γ to Δ (ie a partial function from the variables of Δ to those of Γ *)
   let pren =
     let rec aux = function
@@ -188,7 +222,7 @@ and unify_solve l m s t =
         let dom, ren = aux s in
         (
           match force t with
-          | Var (x, []) when not (IntMap.mem x ren) -> (dom+1, IntMap.add x dom ren)
+          | Var (x, []) when not (IntMap.mem x ren) -> dom+1, IntMap.add x dom ren
           | _ -> raise Unification
         )
       | [] -> 0, IntMap.empty
@@ -213,7 +247,7 @@ and unify_solve l m s t =
         (
           match IntMap.find_opt n pren.ren with
           | Some n' -> aux_spine pren (Var (pren.dom-1-n')) s
-          | None -> raise Unification (* we have an esacping variable *)
+          | None -> raise Unification (* we have an escaping variable *)
         )
       | Pi ((x,i,a),(env,t)) ->
         let t = eval ((var pren.cod)::env) t in
@@ -234,6 +268,7 @@ and unify_solve l m s t =
   in
   let t = rename m pren t in
   let solution = eval [] @@ Term.abss (List.mapi (fun n i -> "x" ^ string_of_int (n+1), i) @@ List.rev @@ List.map fst s) t in
+  Printf.printf "metavariable ?%d gets %s\n%!" m.id (to_string solution);
   m.value <- Some solution
 
 let unify l t u =
