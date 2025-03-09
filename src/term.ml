@@ -41,3 +41,15 @@ let rec to_string vars = function
   | Ind_nat -> "Ind_nat"
 
 let to_string ?(vars=[]) = to_string vars
+
+let abss xx t =
+  let rec aux xx =
+    match xx with
+    | x::xx -> Abs (x, aux xx)
+    | [] -> t
+  in
+  aux xx
+
+let rec rev_apps_explicit t = function
+  | u::uu -> App (rev_apps_explicit t uu, (`Explicit, u))
+  | [] -> t
