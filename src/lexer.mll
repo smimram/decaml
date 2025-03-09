@@ -23,7 +23,12 @@ rule token = parse
   | "type" { TYPE }
   | (['0'-'9']+ as n) { INT (int_of_string n) }
   | (first_char char* as s) { IDENT s }
-  | "(*"[^'*']*"*)" { token lexbuf }
+  | "(*" { comment 0 lexbuf; token lexbuf }
   | space+ { token lexbuf }
   | "\n" { new_line lexbuf; token lexbuf }
   | eof { EOF }
+
+and comment depth = parse
+  | "(*" { comment (depth+1) lexbuf }
+  | "*)" { if depth > 0 then comment (depth-1) lexbuf }
+  | _    { comment depth lexbuf }
