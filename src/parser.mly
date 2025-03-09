@@ -8,7 +8,7 @@ let cast ~pos a t =
   | None -> t
 %}
 
-%token LET IN EQ COLON HOLE TO
+%token LET IN EQ COLON HOLE FUN TO
 %token LPAR RPAR LACC RACC
 %token TYPE
 %token<string> IDENT
@@ -46,7 +46,7 @@ opttype:
 
 expr:
   | a=sexpr TO b=expr { arr ~pos:$loc a b }
-  /* | FUN  */
+  | FUN x=arg TO t=expr { mk ~pos:$loc (Abs (x, t)) }
   | aexpr { $1 }
 
 // Application

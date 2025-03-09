@@ -12,6 +12,7 @@ let char = first_char | ['0'-'9']
 rule token = parse
   | "let" { LET }
   | "in" { IN }
+  | "fun" { FUN }
   | ":" { COLON }
   | "=" { EQ }
   | "->" { TO }
