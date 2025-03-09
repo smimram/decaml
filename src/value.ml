@@ -206,7 +206,16 @@ let rec unify l (t:t) (u:t) =
     let b' = eval ((var l)::env') b' in
     unify (l+1) b b'
   | Type, Type -> ()
+  | Unit, Unit -> ()
   | Nat, Nat -> ()
+  | Z, Z -> ()
+  | S t, S t' ->
+    (
+      match t, t' with
+      | None, None -> ()
+      | Some t, Some t' -> unify l t t'
+      | _ -> raise Unification
+    )
   | Meta (m,s), Meta (m',s') when m.id = m'.id -> unify_spines l s s'
   | Meta (m,s), t -> unify_solve l m s t
   | t, Meta (m,s) -> unify_solve l m s t
