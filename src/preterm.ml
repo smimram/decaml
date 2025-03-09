@@ -16,7 +16,7 @@ type t =
 (** The contents of an expression. *)
 and desc =
   | Let of var * ty option * t * t
-  | Abs of (var * icit * ty) * t (** λ-abstraction *)
+  | Abs of (var * icit * ty option) * t (** λ-abstraction *)
   | App of t * (icit * t)
   | Var of var
   | Pi of (var * icit * ty) * t
@@ -73,9 +73,11 @@ let rec to_string ?(pa=false) e =
   | Let (x,a,t,u) ->
     let a = match a with Some a -> " : " ^ to_string a | None -> "" in
     Printf.sprintf "let %s%s = %s in\n%s" x a (to_string t) (to_string u)
-  | Abs ((x,i,t), e) ->
-    let arg = icit_pa i (x ^ " : " ^ to_string t) in
-    pa (Printf.sprintf "fun %s -> %s" arg (to_string e))
+  | Abs ((x,i,a),t) ->
+    let arg =
+      let a = match a with Some a -> " : " ^ to_string a | None -> "" in
+      icit_pa i (x ^ a) in
+    pa (Printf.sprintf "fun %s -> %s" arg (to_string t))
   | App (f,(i,e)) ->
     let e =
       match i with

@@ -80,7 +80,11 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let a = V.quote ctx.level a in
     Let (x,a,t,u), b
   | Abs ((x,i,a),t) ->
-    let a = check ctx a V.Type in
+    let a =
+      match a with
+      | Some a -> check ctx a V.Type
+      | None -> fresh_meta ctx
+    in
     let a = V.eval ctx.environment a in
     let ctx' = Context.bind ctx x a in
     let t, b = infer ctx' t in
