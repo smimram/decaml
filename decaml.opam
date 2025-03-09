@@ -9,6 +9,7 @@ homepage: "https://github.com/smimram/decaml"
 bug-reports: "https://github.com/smimram/decaml/issues"
 depends: [
   "dune" {>= "2.0"}
+  "ocaml" {>= "5.2"}
 ]
 build: [
   ["dune" "subst"] {pinned}

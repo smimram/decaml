@@ -11,5 +11,8 @@
  (name decaml)
  (synopsis "OCaml-like language with dependent types")
  (description "DeCaml is a an OCaml-like language with dependent types.")
+ (depends
+   (ocaml (>= 5.2))
+ )
 )
 (using menhir 2.0)
