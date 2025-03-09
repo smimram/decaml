@@ -45,4 +45,5 @@ sexpr:
   | HOLE { mk ~pos:$loc Hole }
   | INT { nat ~pos:$loc $1 }
   | LPAR RPAR {mk ~pos:$loc U }
+  | LPAR expr RPAR { $2 }
   /* | def IN expr { let (f, t) = $1 in mk ~pos:$loc (Let (f, None, t, $3)) } */

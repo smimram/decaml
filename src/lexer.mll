@@ -20,7 +20,7 @@ rule token = parse
   | "}" { RACC }
   | "_" { HOLE }
   | "type" { TYPE }
-  | (['0'-'9']+ as n) { INT (Printf.printf "int %s\n" n; int_of_string n) }
+  | (['0'-'9']+ as n) { INT (int_of_string n) }
   | (first_char char* as s) { IDENT s }
   | "(*"[^'*']*"*)" { token lexbuf }
   | space+ { token lexbuf }

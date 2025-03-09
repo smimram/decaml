@@ -131,6 +131,11 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let t = fresh_meta ctx in
     let a = V.eval ctx.environment @@ fresh_meta ctx in
     t, a
+  | Cast (t, a) ->
+    let a = check ctx a Type in
+    let a = V.eval ctx.environment a in
+    let t = check ctx t a in
+    t, a
   | Type -> Type, Type
   | Unit -> Unit, Type
   | U -> U, Unit
