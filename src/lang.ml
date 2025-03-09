@@ -87,7 +87,23 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     T.Abs ((x,i),t), V.Pi((x,i,a), Context.close ctx b)
   | App (t,(i,u)) ->
     let tpos = t.pos in
-    let t, c = infer ctx t in
+    let t, c =
+      match i with
+      | `Implicit -> infer ctx t
+      | `Explicit ->
+        (* Apply all implicit arguments to metavariables. *)
+        let rec aux ((t:term),(c:ty)) =
+          match V.force c with
+          | Pi((_,`Implicit,_),(env,b)) ->
+            let m = fresh_meta ctx in
+            let m' = V.eval ctx.environment m in
+            let t = App (t,(`Implicit,m)) in
+            let c = V.eval (m'::env) b in
+            aux (t, c)
+          | _ -> t,c
+        in
+        aux @@ infer ctx t
+    in
     let a,(env,b) =
       match c with
       | Pi ((_,i',a),(env,b)) ->

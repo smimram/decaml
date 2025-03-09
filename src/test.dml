@@ -1,16 +1,18 @@
 let u = ()
 
-let ten = 3
+let ten = 10
 
 let id_nat (x : nat) = x
 
 let id (a : type) (x : a) = x
 
-let n = id nat Z
+let n = id nat 2
 
-let n = id _ Z
+let n = id _ 2
 
 let id {a : type} (x : a) = x
+
+let n = id 2
 
 (*
 Local Variables: 
