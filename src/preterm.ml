@@ -33,6 +33,10 @@ let mk ?pos desc =
   let pos = Option.value ~default:Pos.dummy pos in
   { pos; desc }
 
+(** Non-dependent arrow. *)
+let arr ?pos a b =
+  mk ?pos (Pi (("_",`Explicit,a),b))
+
 (** Multiple abstractions. *)
 let abss ?pos a e =
   let pos = Option.value ~default:e.pos pos in

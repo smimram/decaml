@@ -1,14 +1,21 @@
 %{
 open Preterm
 open Module
+
+let cast ~pos a t =
+  match a with
+  | Some a -> mk ~pos (Cast (t, a))
+  | None -> t
 %}
 
-%token LET IN EQ COLON HOLE
+%token LET IN EQ COLON HOLE TO
 %token LPAR RPAR LACC RACC
 %token TYPE
 %token<string> IDENT
 %token<int> INT
 %token EOF
+
+%right TO
 
 %start main
 %type<Module.t> main
@@ -25,20 +32,30 @@ decl:
   | def { Def $1 }
 
 def:
-  | LET f = IDENT a = args EQ e = expr { (f, abss ~pos:$loc a e) }
+  | LET f=IDENT args=args a=opttype EQ e=expr { (f, abss ~pos:$loc args (cast ~pos:$loc(a) a e)) }
 
 args:
   | arg args { $1 :: $2 }
   | { [] }
 
 arg:
-  | LPAR x = IDENT COLON a = expr RPAR { (x, `Explicit, a) }
-  | LACC x = IDENT COLON a = expr RACC { (x, `Implicit, a) }
+  | LPAR x=IDENT COLON a=expr RPAR { (x, `Explicit, a) }
+  | LACC x=IDENT COLON a=expr RACC { (x, `Implicit, a) }
+
+opttype:
+  /* | COLON sexpr { Some $2 } */
+  | { None }
 
 expr:
-  | expr sexpr { mk ~pos:$loc (App ($1, (`Explicit, $2))) }
+  | a=sexpr TO b=expr { arr ~pos:$loc a b }
+  | aexpr { $1 }
+
+// Application
+aexpr:
+  | aexpr sexpr { mk ~pos:$loc (App ($1, (`Explicit, $2))) }
   | sexpr { $1 }
 
+// Simple expression
 sexpr:
   | IDENT { mk ~pos:$loc (Var $1) }
   | TYPE { mk ~pos:$loc Type }

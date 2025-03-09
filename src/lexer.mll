@@ -14,6 +14,7 @@ rule token = parse
   | "in" { IN }
   | ":" { COLON }
   | "=" { EQ }
+  | "->" { TO }
   | "(" { LPAR }
   | ")" { RPAR }
   | "{" { LACC }
