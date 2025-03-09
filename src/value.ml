@@ -85,7 +85,7 @@ type partial_renaming =
 let var x = Var (x, [])
 
 (** Create a (non-dependent) arrow. *)
-let arr a b = Pi (("_", `Explicit, a), ([],b))
+let arr a b = Pi (("_", `Explicit, a), ([], b))
 
 (** Generate a fresh variable name. *)
 let fresh_var_name =

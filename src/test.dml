@@ -1,10 +1,10 @@
+let n = type
+
 let u = ()
 
 let ten = 10
 
 let id_nat (x : nat) = x
-
-let a = nat -> nat
 
 (* let id_nat : nat -> nat = fun x -> x *)
 

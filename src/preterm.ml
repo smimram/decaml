@@ -35,7 +35,7 @@ let mk ?pos desc =
 
 (** Non-dependent arrow. *)
 let arr ?pos a b =
-  mk ?pos (Pi (("_",`Explicit,a),b))
+  mk ?pos (Pi (("_", `Explicit, a), b))
 
 (** Multiple abstractions. *)
 let abss ?pos a e =
@@ -85,7 +85,7 @@ let rec to_string ?(pa=false) e =
     pa (Printf.sprintf "%s %s" (to_string f) e)
   | Pi ((x,i,t),e) ->
     let arg = icit_pa i (x ^ " : " ^ to_string t) in
-    pa (Printf.sprintf "Π %s -> %s" arg (to_string e))
+    pa (Printf.sprintf "%s -> %s" arg (to_string e))
   | Var x -> x
   | Hole -> "_"
   | Cast (t,a) -> Printf.sprintf "(%s : %s)" (to_string t) (to_string a)

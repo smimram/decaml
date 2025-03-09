@@ -46,6 +46,7 @@ opttype:
 
 expr:
   | a=sexpr TO b=expr { arr ~pos:$loc a b }
+  /* | FUN  */
   | aexpr { $1 }
 
 // Application

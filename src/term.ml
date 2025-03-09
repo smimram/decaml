@@ -31,9 +31,9 @@ let rec to_string vars = function
   | App (t,(i,u)) ->
     Printf.sprintf "%s %s" (to_string vars t) (icit_pa i (to_string vars u))
   | Var n -> if n < 0 then Printf.sprintf "x#%d" n else List.nth vars n
-  | Pi ((x,i,a),_) ->
+  | Pi ((x,i,a),b) ->
     let x = icit_pa i (x ^ " : " ^ to_string vars a) in
-    Printf.sprintf "%s -> %s" x (to_string (x::vars) a)
+    Printf.sprintf "%s -> %s" x (to_string vars b)
   | Type -> "type"
   | Meta m -> "?" ^ string_of_int m
   | InsertedMeta (m,_) -> "?" ^ string_of_int m
