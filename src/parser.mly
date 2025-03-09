@@ -15,8 +15,6 @@ let cast ~pos a t =
 %token<int> INT
 %token EOF
 
-%right TO
-
 %start main
 %type<Module.t> main
 %%
@@ -43,7 +41,7 @@ arg:
   | LACC x=IDENT COLON a=expr RACC { (x, `Implicit, a) }
 
 opttype:
-  /* | COLON sexpr { Some $2 } */
+  | COLON expr { Some $2 }
   | { None }
 
 expr:
