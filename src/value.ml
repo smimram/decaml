@@ -59,19 +59,17 @@ let rec to_string_simple ?(pa=false) t =
   | S (Some t) -> pa ("S " ^ to_string_simple ~pa:true t)
 *)
 
-(* TODO: would be much more efficiently implemented by using Dynarray *)
-let metavariables = ref []
+let metavariables = Dynarray.create ()
 
 (** Generate a fresh metavariable. *)
 let fresh_meta () =
-  let id = List.length !metavariables in
-  let m = { id; value = None } in
-  metavariables := m :: !metavariables;
+  let m = { id = Dynarray.length metavariables; value = None } in
+  Dynarray.add_last metavariables m;
   m
 
 (** Get metavariable with given id. *)
 let get_meta id =
-  List.find (fun m -> m.id = id) !metavariables
+  Dynarray.get metavariables id
 
 module IntMap = Map.Make(Int)
 
