@@ -4,12 +4,13 @@ synopsis: "OCaml-like language with dependent types"
 description: "DeCaml is a an OCaml-like language with dependent types."
 maintainer: ["Samuel Mimram <smimram@gmail.com>"]
 authors: ["Samuel Mimram <smimram@gmail.com>"]
-license: "GPL-3.0"
+license: "GPL-3.0-or-later"
 homepage: "https://github.com/smimram/decaml"
 bug-reports: "https://github.com/smimram/decaml/issues"
 depends: [
   "dune" {>= "2.0"}
   "ocaml" {>= "5.2"}
+  "menhir"
 ]
 build: [
   ["dune" "subst"] {pinned}
