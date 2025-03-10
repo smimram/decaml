@@ -46,12 +46,12 @@ opttype:
   | { None }
 
 piarg:
-  | LPAR x=IDENT COLON a=expr RPAR { (x, `Explicit, Some a) }
-  | LACC x=IDENT a=opttype RACC { (x, `Implicit, a) }
+  | LPAR x=IDENT COLON a=expr RPAR { [(x, `Explicit, Some a)] }
+  | LACC xx=idents a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
 
 expr:
-  | a=sexpr TO b=expr { arr ~pos:$loc a b }
-  | a=piarg TO b=expr { mk ~pos:$loc (Pi (a, b)) }
+  | a=aexpr TO b=expr { arr ~pos:$loc a b }
+  | a=piarg TO b=expr { pis ~pos:$loc a b }
   | FUN x=args TO t=expr { abss ~pos:$loc x t }
   | aexpr { $1 }
 
@@ -69,3 +69,7 @@ sexpr:
   | LPAR RPAR {mk ~pos:$loc U }
   | LPAR expr RPAR { $2 }
   /* | def IN expr { let (f, t) = $1 in mk ~pos:$loc (Let (f, None, t, $3)) } */
+
+idents:
+  | IDENT idents { $1::$2 }
+  | IDENT { [$1] }
