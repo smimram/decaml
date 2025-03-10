@@ -16,9 +16,9 @@ jobs:
       # - name: Install dependencies
         # run: opam install . --deps-only --with-test
       - name: Build
-        run: opam exec -- make
+        run: make
       - name: Test
-        run: opam exec -- make test
+        run: make test
     # - name: Upload website artifact
       # uses: actions/upload-pages-artifact@v3
       # with:
