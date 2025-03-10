@@ -45,6 +45,9 @@ module Context = struct
       bds = `Bound::ctx.bds;
     }
 
+  (** Insert a new binding. *)
+  let new_binder = bind
+
   (** Define a term to a given value and type. *)
   let define ctx x t a =
     {
@@ -61,6 +64,17 @@ end
 let fresh_meta (ctx:Context.t) =
   let m = Value.fresh_meta () in
   InsertedMeta (m.id, ctx.bds)
+
+(** Apply all implicit arguments to metavariables. *)
+let rec insert ctx (t:term) (a:ty) =
+  match V.force a with
+  | Pi((_,`Implicit,_),(env,b)) ->
+    let m = fresh_meta ctx in
+    let m' = V.eval ctx.environment m in
+    let t = App (t,(`Implicit,m)) in
+    let a = V.eval (m'::env) b in
+    insert ctx t a
+  | _ -> t, a
 
 let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   let pos = t.pos in
@@ -127,7 +141,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     in
     Var n, a
   | Pi ((x,i,a),b) ->
-    let a = check ctx a Type in
+    let a = match a with Some a -> check ctx a Type | None -> fresh_meta ctx in
     let b = check (Context.bind ctx x (V.eval ctx.environment a)) b Type in
     Pi ((x,i,a),b), Type
   | Hole ->
@@ -148,6 +162,41 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
 
 and check (ctx:Context.t) (t:preterm) (a:ty) : term =
   let pos = t.pos in
-  let t, a' = infer ctx t in
-  if not @@ V.unify ctx.Context.level a' a then type_error pos "expression has type %s but %s expected" (V.to_string a') (V.to_string a);
-  t
+  match t.desc, V.force a with
+
+  | Abs ((x,i,a),t), Pi ((_x',i',a'),(env,b)) when i = i' ->
+    if a <> None then
+      (
+        let a = Option.get a in
+        let pos = a.pos in
+        let a = check ctx a Type in
+        let a = V.eval ctx.environment a in
+        if not @@ V.unify ctx.level a a' then type_error pos "expression has type %s but %s expected" (V.to_string a) (V.to_string a')
+      );
+    let b = V.eval ((V.var ctx.level)::env) b in
+    let t = check (Context.bind ctx x a') t b in
+    Abs ((x,i),t)
+
+  | _, Pi ((x,`Implicit,a),(env,b)) ->
+    (* Insert an implicit abstraction. *)
+    let b = V.eval ((V.var ctx.level)::env) b in
+    let t = check (Context.new_binder ctx x a) t b in
+    Abs ((x,`Implicit),t)
+
+  | Let (x,a,t,u), a' ->
+    let a =
+      match a with
+      | Some a -> check ctx a Type
+      | None -> fresh_meta ctx
+    in
+    let va = V.eval ctx.environment a in
+    let t = check ctx t va in
+    let vt = V.eval ctx.environment t in
+    let u = check (Context.define ctx x vt va) u a' in
+    Let (x,a,t,u)
+
+  | _, a' ->
+    let t, a = infer ctx t in
+    let t, a = insert ctx t a in
+    if not @@ V.unify ctx.level a a' then type_error pos "expression has type %s but %s expected" (V.to_string a) (V.to_string a');
+    t

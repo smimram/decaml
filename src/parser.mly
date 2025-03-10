@@ -45,9 +45,14 @@ opttype:
   | COLON expr { Some $2 }
   | { None }
 
+piarg:
+  | LPAR x=IDENT COLON a=expr RPAR { (x, `Explicit, Some a) }
+  | LACC x=IDENT a=opttype RACC { (x, `Implicit, a) }
+
 expr:
   | a=sexpr TO b=expr { arr ~pos:$loc a b }
-  | FUN x=arg TO t=expr { mk ~pos:$loc (Abs (x, t)) }
+  | a=piarg TO b=expr { mk ~pos:$loc (Pi (a, b)) }
+  | FUN x=args TO t=expr { abss ~pos:$loc x t }
   | aexpr { $1 }
 
 // Application

@@ -18,6 +18,15 @@ let id {a : type} (x : a) = x
 
 let n = id 2
 
+let list : type -> type = fun a -> (l : type) -> (a -> l -> l) -> l -> l
+let nil : {a} -> list a = fun l cons nil -> nil
+(* let cons : {A} -> A -> List A -> List A *)
+    (* = \x xs L cons nil. cons x (xs L cons nil); *)
+(* let map : {A B} -> (A -> B) -> List A -> List B *)
+    (* = \{A}{B} f xs L c n. xs L (\a. c (f a)) n; *)
+(* let list0 : List Bool *)
+    (* = nil; *)
+
 (*
 Local Variables: 
 mode: tuareg
