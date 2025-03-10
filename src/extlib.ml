@@ -1,5 +1,18 @@
 let failwith fmt = Printf.ksprintf failwith fmt
 
+(* Very naive implementation, for backward compatibility... *)
+module Dynarray = struct
+  type 'a t = 'a list ref
+
+  let create () : 'a t = ref []
+
+  let length (a : 'a t) = List.length !a
+
+  let add_last (a : 'a t) x = a := x :: !a
+
+  let get (a : 'a t) n = List.nth !a (length a - 1 - n)
+end
+
 module List = struct
   include List
 
