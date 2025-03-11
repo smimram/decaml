@@ -19,22 +19,24 @@ jobs:
         run: make
       - name: Test
         run: make test
-    # - name: Upload website artifact
-      # uses: actions/upload-pages-artifact@v3
-      # with:
-        # path: website
+      - name: Build documentation
+        rune: make doc
+      - name: Upload website artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _build/default/_doc/_html/
 
-  # deploy:
-    # if: github.ref == 'refs/heads/main'
-    # needs: build
-    # permissions:
-      # pages: write
-      # id-token: write
-    # environment:
-      # name: github-pages
-      # url: ${{ steps.deployment.outputs.page_url }}
-    # runs-on: ubuntu-latest
-    # steps:
-      # - name: Deploy website
-        # id: deployment
-        # uses: actions/deploy-pages@v4
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4
