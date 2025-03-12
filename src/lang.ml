@@ -64,6 +64,10 @@ module Context = struct
   (* close : (Γ : Con) → Val (Γ, x : A) B → Closure Γ A B *)
   let close ctx (t:value) : V.closure = ctx.environment, V.quote (ctx.level + 1) t
 
+  (** Declare an inductive type. *)
+  let inductive ctx ind =
+    { ctx with inductive = ind :: ctx.inductive }
+
   (** Find the inductive type associated to a constructor. *)
   let find_constructor ctx c =
     List.find_opt (fun ind -> List.exists (fun (c',_) -> c' = c) ind.V.constructors) ctx.inductive

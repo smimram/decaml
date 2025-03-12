@@ -33,7 +33,9 @@ and ty = t
 and inductive =
   {
     name : string; (** name *)
-    constructors : (string * ty list * ty) list; (** constructors with given name and types *)
+    parameters : (string * icit * ty) list;
+    indices : ty list;
+    constructors : (string * ty) list; (** constructors with given name and types *)
   }
 
 let mk ?pos desc =

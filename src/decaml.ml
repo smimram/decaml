@@ -40,6 +40,16 @@ let () =
            print_newline ();
            (* Lang.Context.bind ctx x a *)
            Lang.Context.define ctx x (Value.eval ctx.environment t) a
+         | Module.Ind ind ->
+           Printf.printf "inductive %s" ind.Preterm.name;
+           let ind : Value.inductive =
+             { Value.
+               name = ind.name;
+               ty = Value.eval ctx.environment ty;
+               constructors = List.map (fun (c,a) -> c, Value.eval ctx.environment a) ind.constructors;
+             }
+           in
+           Lang.Context.inductive ctx ind
       ) Lang.Context.empty decls
   with
   | Lang.Type_error (pos, e) ->
