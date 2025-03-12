@@ -1,5 +1,7 @@
 let failwith fmt = Printf.ksprintf failwith fmt
 
+let fst3 (x,_y,_z) = x
+
 (* Very naive implementation, for backward compatibility... *)
 module Dynarray = struct
   type 'a t = 'a list ref

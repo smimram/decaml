@@ -11,8 +11,8 @@ type t =
   | Meta of meta * spine
   | Pi of (string * icit * ty) * closure
   | Type
+  | Ind_elim of inductive
 
-  | Unit | U
   | Nat | Z | S of t option | Ind_nat of t list
 
 and ty = t
@@ -28,6 +28,13 @@ and meta =
   {
     id : int;
     mutable value : t option;
+  }
+
+and inductive =
+  {
+    name : string;
+    ty : ty;
+    constructors : (string * ty) list;
   }
 
 type value = t
@@ -123,8 +130,15 @@ let rec eval (env:environment) (t:term) =
     let s = List.filter_map2 (fun t d -> if d = `Bound then Some (`Explicit, t) else None) env bds in
     app_spine t s
   | Type -> Type
-  | Unit -> Unit
-  | U -> U
+  | Ind_elim ind ->
+    let ind =
+      {
+        name = ind.name;
+        ty = eval env ind.ty;
+        constructors = List.map (fun (c,a) -> c, eval env a) ind.constructors;
+      }
+    in
+    Ind_elim ind
   | Nat -> Nat
   | Z -> Z
   | S -> S None
@@ -173,8 +187,15 @@ let rec quote l (t:t) : term =
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type
-  | Unit -> Unit
-  | U -> U
+  | Ind_elim ind ->
+    let ind : Term.inductive =
+      {
+        name = ind.name;
+        ty = quote l ind.ty;
+        constructors = List.map (fun (c,a) -> c, quote l a) ind.constructors;
+      }
+    in
+    Ind_elim ind
   | Nat -> Nat
   | Z -> Z
   | S None -> S
@@ -209,7 +230,6 @@ let rec unify l (t:t) (u:t) =
     let b' = eval ((var l)::env') b' in
     unify (l+1) b b'
   | Type, Type -> ()
-  | Unit, Unit -> ()
   | Nat, Nat -> ()
   | Z, Z -> ()
   | S t, S t' ->
@@ -271,8 +291,7 @@ and unify_solve l m s t =
         let t = eval ((var pren.cod)::env) t in
         Pi ((x,i,aux pren a), aux (lift pren) t)
       | Type -> Type
-      | Unit -> Unit
-      | U -> U
+      | Ind_elim ind -> Ind_elim { name = ind.name; ty = aux pren ind.ty; constructors = List.map (fun (c,a) -> c, aux pren a) ind.constructors }
       | Nat -> Nat
       | Z -> Z
       | S None -> S

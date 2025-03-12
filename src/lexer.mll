@@ -1,7 +1,7 @@
 {
 open Lexing
 open Parser
-(* open LexingUtils *)
+open LexingUtils
 }
 
 let space = ' ' | '\t' | '\r'
@@ -13,9 +13,13 @@ rule token = parse
   | "let" { LET }
   | "in" { IN }
   | "fun" { FUN }
+  | "match" { MATCH }
+  | "with" { WITH }
+  | "|" { BAR }
   | ":" { COLON }
   | "=" { EQ }
   | "->" { TO }
+  | "→" as s { utf8 s lexbuf; TO }
   | "(" { LPAR }
   | ")" { RPAR }
   | "{" { LACC }

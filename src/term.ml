@@ -12,8 +12,7 @@ type t =
   | Meta of meta
   | InsertedMeta of meta * [`Bound | `Defined] list
   | Type (** the type of types *)
-
-  | Unit | U
+  | Ind_elim of inductive
 
   | Nat
   | Z | S | Ind_nat
@@ -21,6 +20,13 @@ type t =
 and ty = t
 
 and meta = int
+
+and inductive =
+  {
+    name : string;
+    ty : ty; (** type of the type constructor *)
+    constructors : (string * ty) list;
+  }
 
 let rec to_string vars = function
   | Let (x,a,t,u) ->
@@ -37,12 +43,11 @@ let rec to_string vars = function
   | Type -> "type"
   | Meta m -> "?" ^ string_of_int m
   | InsertedMeta (m,_) -> "?" ^ string_of_int m
-  | Unit -> "unit"
-  | U -> "()"
+  | Ind_elim ind -> ind.name ^ "_elim"
   | Nat -> "nat"
   | Z -> "Z"
   | S -> "S"
-  | Ind_nat -> "Ind_nat"
+  | Ind_nat -> "nat_ind"
 
 let to_string ?(vars=[]) = to_string vars
 
