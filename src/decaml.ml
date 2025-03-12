@@ -32,7 +32,7 @@ let () =
     List.fold_left
       (fun ctx decl ->
          match decl with
-         | Module.Def (x,t) ->
+         | Module.Def (_r,x,t) ->
            (* Printf.printf "%s = %s\n%!" x (Preterm.to_string t); *)
            let t, a = Lang.infer ctx t in
            Printf.printf "%s : %s\n%!" x (Value.to_string ~vars:(List.map fst ctx.types) a);

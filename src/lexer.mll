@@ -11,6 +11,7 @@ let char = first_char | ['0'-'9']
 
 rule token = parse
   | "let" { LET }
+  | "rec" { REC }
   | "in" { IN }
   | "fun" { FUN }
   | ":" { COLON }
