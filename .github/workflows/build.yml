@@ -14,7 +14,7 @@ jobs:
       - name: Test
         run: make test
       - name: Build documentation
-        rune: make doc
+        run: make doc
       - name: Upload website artifact
         uses: actions/upload-pages-artifact@v3
         with:
