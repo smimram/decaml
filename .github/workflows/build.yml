@@ -8,19 +8,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install packages
-        run: sudo apt-get install ocaml-nox menhir ocaml-dune
-      # - name: Setup OCaml
-        # uses: ocaml/setup-ocaml@v3
-        # with:
-          # ocaml-compiler: 5.3
-      # - name: Install dependencies
-        # run: opam install . --deps-only --with-test
+        run: sudo apt-get install ocaml-nox menhir ocaml-dune ocaml-odoc
       - name: Build
         run: make
       - name: Test
         run: make test
       - name: Build documentation
-        rune: make doc
+        run: make doc
       - name: Upload website artifact
         uses: actions/upload-pages-artifact@v3
         with:
