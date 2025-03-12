@@ -32,9 +32,18 @@ let () =
     List.fold_left
       (fun ctx decl ->
          match decl with
-         | Module.Def (_r,x,t) ->
+         | Module.Def (r,x,t) ->
            (* Printf.printf "%s = %s\n%!" x (Preterm.to_string t); *)
-           let t, a = Lang.infer ctx t in
+           let t, a =
+             if r then
+               let a = Lang.fresh_meta ctx in
+               let a = Value.eval ctx.environment a in
+               let ctx = Lang.Context.bind ctx x a in
+               let t = Lang.check ctx t a in
+               t, a
+             else
+               Lang.infer ctx t
+           in
            Printf.printf "%s : %s\n%!" x (Value.to_string ~vars:(List.map fst ctx.types) a);
            Printf.printf "%s = %s\n%!" x (Term.to_string ~vars:(List.map fst ctx.types) t);
            print_newline ();

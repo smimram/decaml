@@ -25,6 +25,8 @@ let map : {a b} -> (a -> b) -> list a -> list b = fun {a} {b} f xs l c n -> xs l
 let list0 : list nat = nil
 let list1 : list nat = cons 0 (cons 1 (cons 2 nil))
 
+let rec bot = bot
+
 (*
 Local Variables: 
 mode: tuareg
