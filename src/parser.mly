@@ -8,7 +8,7 @@ let cast ~pos a t =
   | None -> t
 %}
 
-%token LET IN EQ COLON HOLE FUN TO
+%token LET REC IN EQ COLON HOLE FUN TO
 %token LPAR RPAR LACC RACC
 %token TYPE
 %token<string> IDENT
@@ -30,7 +30,11 @@ decl:
   | def { Def $1 }
 
 def:
-  | LET f=IDENT args=args a=opttype EQ e=expr { (f, abss ~pos:$loc args (cast ~pos:$loc(a) a e)) }
+  | LET r=recursive f=IDENT args=args a=opttype EQ e=expr { (r, f, abss ~pos:$loc args (cast ~pos:$loc(a) a e)) }
+
+recursive:
+  | REC { true }
+  | { false }
 
 args:
   | arg args { $1 :: $2 }
