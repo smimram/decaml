@@ -25,7 +25,7 @@ decl:
   | def { Def $1 }
 
 def:
-  | LET r=recursive f=IDENT args=args a=opttype EQ e=expr { (r, f, a, abss ~pos:$loc args e) }
+  | LET r=recursive f=IDENT args=args a=opttype EQ e=expr { (r, f, Option.map (pis ~pos:$loc args) a, abss ~pos:$loc args e) }
 
 recursive:
   | REC { true }

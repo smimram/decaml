@@ -34,6 +34,11 @@ let length : {a} -> list a -> nat = fun l -> Z
 (* let rec length : {a} -> list a -> nat = fun (l : list a) -> Z *)
 (* let rec length : {a} -> list a -> nat = fun (l : list a) -> l {nat} (fun x (l : list a) -> S (length l)) Z *)
 
+let r {a} (x : a) = Z
+let rec rr (a : type) (x : a) : nat = Z
+let rec rrr {a} (x : a) : nat = Z
+(* let rec rr {a} (x : a) = Z *)
+
 (* (\** Scott natural numbers. *\) *)
 
 (* let nat {a b} : type = (s : a -> b) (z : b -> b) -> b -> b *)

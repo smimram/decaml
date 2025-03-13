@@ -165,9 +165,14 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let b = check (Context.bind ctx x (eval ctx a)) b Type in
     Pi ((x,i,a),b), Type
   | Fix t ->
+    (* Extend the context of a meta-variable to ignore a bound variable. *)
+    let lift_meta = function
+      | InsertedMeta (m, bds) -> InsertedMeta (m, `Defined::bds)
+      | _ -> assert false
+    in
     let a = fresh_meta ctx in
     let va = eval ctx a in
-    let t = check ctx t (V.arr va a) in
+    let t = check ctx t (V.arr va @@ lift_meta a) in
     t, va
   | Hole ->
     let t = fresh_meta ctx in
@@ -203,7 +208,8 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     let t = check (Context.bind ctx x a') t b in
     Abs ((x,i),t)
 
-  | _, Pi ((x,`Implicit,a),(env,b)) ->
+  | _, Pi ((x,`Implicit,a),(env,b)) when not (P.is_fix t) ->
+
     (* Insert an implicit abstraction. *)
     let b = V.eval ((V.var ctx.level)::env) b in
     let t = check (Context.new_binder ctx x a) t b in

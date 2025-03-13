@@ -24,8 +24,8 @@ let prelude (d:t) : t =
 
 let eval_decl ctx = function
   | Def (r,x,a,t) ->
-    let t = if r then mk (Fix (mk (Abs ((x,`Implicit,a),t)))) else t in
-    (* Printf.printf "%s = %s\n%!" x (Preterm.to_string t); *)
+    let t = if r then mk (Fix (mk (Abs ((x,`Explicit,a),t)))) else t in
+    Printf.printf "%s = %s\n%!" x (Preterm.to_string t);
     let t, a =
       match a with
       | Some a ->
