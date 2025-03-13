@@ -36,6 +36,10 @@ module Context = struct
       bds = [];
     }
 
+  (** Variables defined in the context. *)
+  let variables ctx =
+    List.map fst ctx.types
+
   (** Declare a bound variable of given type. *)
   let bind ctx x a =
     {
@@ -64,6 +68,9 @@ end
 let fresh_meta (ctx:Context.t) =
   let m = Value.fresh_meta () in
   InsertedMeta (m.id, ctx.bds)
+
+let to_string ctx t =
+  T.to_string ~vars:(Context.variables ctx) @@ V.quote ctx.Context.level t
 
 (** Apply all implicit arguments to metavariables. *)
 let rec insert ctx (t:term) (a:ty) =
@@ -123,11 +130,21 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
         aux @@ infer ctx t
     in
     let a,(env,b) =
-      match c with
+      match V.force c with
       | Pi ((_,i',a),(env,b)) ->
         if i <> i' then failwith "TODO: support implicit parameters";
         a,(env,b)
-      | _ -> type_error tpos "term has type %s but a function was expected" @@ V.to_string c
+      | _ ->
+        (* type_error tpos "term has type %s but a function was expected" @@ V.to_string c *)
+        let a = fresh_meta ctx in
+        let b = fresh_meta (Context.bind ctx "x" (V.eval ctx.environment a)) in
+        let c' = V.eval ctx.environment (Pi(("x",i,a),b)) in
+        unify tpos ctx c c';
+        (
+          match V.force c' with
+          | Pi ((_,_,a),(env,b)) -> a,(env,b)
+          | _ -> assert false
+        )
     in
     let u = check ctx u a in
     App (t,(i,u)), V.eval ((V.eval ctx.environment u)::env) b
@@ -144,6 +161,11 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let a = match a with Some a -> check ctx a Type | None -> fresh_meta ctx in
     let b = check (Context.bind ctx x (V.eval ctx.environment a)) b Type in
     Pi ((x,i,a),b), Type
+  | Fix t ->
+    let a = fresh_meta ctx in
+    let va = V.eval ctx.environment a in
+    let t = check ctx t (V.arr va a) in
+    t, va
   | Hole ->
     let t = fresh_meta ctx in
     let a = V.eval ctx.environment @@ fresh_meta ctx in
@@ -198,5 +220,9 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
   | _, a' ->
     let t, a = infer ctx t in
     let t, a = insert ctx t a in
-    if not @@ V.unify ctx.level a a' then type_error pos "expression has type %s but %s expected" (V.to_string a) (V.to_string a');
+    unify pos ctx a a';
     t
+
+and unify pos (ctx:Context.t) (a:ty) (b:ty) =
+  if not @@ V.unify ctx.Context.level a b then
+    type_error pos "expression has type %s but %s expected" (to_string ctx a) (to_string ctx b)

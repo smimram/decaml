@@ -122,6 +122,7 @@ let rec eval (env:environment) (t:term) =
       | Some t -> t
       | None -> Meta (m, [])
     in
+    assert (List.length env = List.length bds);
     let s = List.filter_map2 (fun t d -> if d = `Bound then Some (`Explicit, t) else None) env bds in
     app_spine t s
   | Type -> Type

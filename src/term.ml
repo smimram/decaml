@@ -28,7 +28,7 @@ let rec to_string vars = function
     Printf.sprintf "let %s : %s = %s in\n%s" x (to_string vars a) (to_string vars t) (to_string vars u)
   | Abs ((x,i),t) ->
     let x = icit_pa i x in
-    Printf.sprintf "fun %s -> %s" x (to_string(x::vars) t)
+    Printf.sprintf "fun %s -> %s" x (to_string (x::vars) t)
   | App (t,(i,u)) ->
     Printf.sprintf "%s %s" (to_string vars t) (icit_pa i (to_string vars u))
   | Var n -> if n < 0 then Printf.sprintf "x#%d" n else List.nth vars n

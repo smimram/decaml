@@ -21,6 +21,7 @@ and desc =
   | Var of var
   | Pi of (var * icit * ty option) * t
   | Type (** the type of types *)
+  | Fix of t
   | Hole
   | Cast of t * ty (** ensure that a term has given type *)
 
@@ -91,6 +92,7 @@ let rec to_string ?(pa=false) e =
     pa (Printf.sprintf "%s -> %s" arg (to_string b))
   | Var x -> x
   | Hole -> "_"
+  | Fix t -> "fix " ^ to_string ~pa:true t
   | Cast (t,a) -> Printf.sprintf "(%s : %s)" (to_string t) (to_string a)
   | Type -> "type"
   | Unit -> "unit"
