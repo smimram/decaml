@@ -69,10 +69,11 @@ let fresh_meta (ctx:Context.t) =
   let m = Value.fresh_meta () in
   InsertedMeta (m.id, ctx.bds)
 
-let to_string ctx t =
-  T.to_string (Context.variables ctx) @@ V.quote ctx.Context.level t
-
 let eval ctx (t : term) : value = V.eval ctx.Context.environment t
+
+let quote ctx (t : value) : term = V.quote ctx.Context.level t
+
+let to_string ctx t = T.to_string (Context.variables ctx) @@ quote ctx t
 
 (** Apply all implicit arguments to metavariables. *)
 let rec insert ctx (t:term) (a:ty) =
@@ -100,7 +101,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     in
     let u, b = infer (Context.define ctx x (eval ctx t) a) u in
     (* TODO: check this quote *)
-    let a = V.quote ctx.level a in
+    let a = quote ctx a in
     Let (x,a,t,u), b
   | Abs ((x,i,a),t) ->
     let a =
@@ -185,6 +186,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   | S -> S, V.arr Nat Nat
 
 and check (ctx:Context.t) (t:preterm) (a:ty) : term =
+  (* Printf.printf "*** check %s : %s\n%!" (P.to_string t) (to_string ctx a); *)
   let pos = t.pos in
   match t.desc, V.force a with
 
@@ -218,6 +220,9 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     let vt = eval ctx t in
     let u = check (Context.define ctx x vt va) u a' in
     Let (x,a,t,u)
+
+  | Fix t, b ->
+    check ctx t (V.arr b (quote ctx b))
 
   | _, a' ->
     let t, a = infer ctx t in
