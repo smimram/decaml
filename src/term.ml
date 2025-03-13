@@ -46,8 +46,6 @@ let rec to_string vars = function
   | S -> "S"
   | Ind_nat -> "Ind_nat"
 
-let to_string ?(vars=[]) = to_string vars
-
 let abss xx t =
   let rec aux xx =
     match xx with

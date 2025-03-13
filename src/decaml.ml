@@ -42,7 +42,7 @@ let () =
            (* Printf.printf "%s = %s\n%!" x (Preterm.to_string t); *)
            let t, a = Lang.infer ctx t in
            Printf.printf "%s : %s\n%!" x (Lang.to_string ctx a);
-           Printf.printf "%s = %s\n%!" x (T.to_string ~vars:(Lang.Context.variables ctx) t);
+           Printf.printf "%s = %s\n%!" x (T.to_string (Lang.Context.variables ctx) t);
            print_newline ();
            (* Lang.Context.bind ctx x a *)
            Lang.Context.define ctx x (V.eval ctx.environment t) a

@@ -187,12 +187,12 @@ let rec quote l (t:t) : term =
   | S (Some t) -> App (S, (`Explicit, quote l t))
   | Ind_nat s -> app_explicit_spine Ind_nat s
 
-let to_string ?(vars=[]) t = Term.to_string ~vars @@ quote 0 t
+let to_string vars t = Term.to_string vars @@ quote (List.length vars) t
 
 let string_of_meta vars m =
   let m = get_meta m in
   match m.value with
-  | Some t -> to_string ~vars t
+  | Some t -> to_string vars t
   | None -> "?" ^ string_of_int m.id
 
 exception Unification
@@ -293,7 +293,7 @@ and unify_solve l m s t =
   in
   let t = rename m pren t in
   let solution = eval [] @@ Term.abss (List.mapi (fun n i -> "x" ^ string_of_int (n+1), i) @@ List.rev @@ List.map fst s) t in
-  Printf.printf "metavariable ?%d gets %s\n%!" m.id (to_string solution);
+  Printf.printf "metavariable ?%d gets %s\n%!" m.id (to_string [] solution);
   m.value <- Some solution
 
 let unify l t u =

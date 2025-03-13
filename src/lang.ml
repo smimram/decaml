@@ -70,7 +70,7 @@ let fresh_meta (ctx:Context.t) =
   InsertedMeta (m.id, ctx.bds)
 
 let to_string ctx t =
-  T.to_string ~vars:(Context.variables ctx) @@ V.quote ctx.Context.level t
+  T.to_string (Context.variables ctx) @@ V.quote ctx.Context.level t
 
 (** Apply all implicit arguments to metavariables. *)
 let rec insert ctx (t:term) (a:ty) =
@@ -193,7 +193,7 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
         let pos = a.pos in
         let a = check ctx a Type in
         let a = V.eval ctx.environment a in
-        if not @@ V.unify ctx.level a a' then type_error pos "expression has type %s but %s expected" (V.to_string a) (V.to_string a')
+        if not @@ V.unify ctx.level a a' then type_error pos "expression has type %s but %s expected" (to_string ctx a) (to_string ctx a')
       );
     let b = V.eval ((V.var ctx.level)::env) b in
     let t = check (Context.bind ctx x a') t b in
