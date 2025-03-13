@@ -193,7 +193,7 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
         let pos = a.pos in
         let a = check ctx a Type in
         let a = V.eval ctx.environment a in
-        if not @@ V.unify ctx.level a a' then type_error pos "expression has type %s but %s expected" (to_string ctx a) (to_string ctx a')
+        unify pos ctx a a'
       );
     let b = V.eval ((V.var ctx.level)::env) b in
     let t = check (Context.bind ctx x a') t b in
