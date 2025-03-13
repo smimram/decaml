@@ -11,6 +11,7 @@ type t =
   | Meta of meta * spine
   | Pi of (string * icit * ty) * closure
   | Type
+  | Delayed of closure
 
   | Unit | U
   | Nat | Z | S of t option | Ind_nat of t list
@@ -173,6 +174,7 @@ let rec quote l (t:t) : term =
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type
+  | Delayed (env, t) -> Delayed (env, t)
   | Unit -> Unit
   | U -> U
   | Nat -> Nat
@@ -271,6 +273,7 @@ and unify_solve l m s t =
         let t = eval ((var pren.cod)::env) t in
         Pi ((x,i,aux pren a), aux (lift pren) t)
       | Type -> Type
+      | Delayed (env, t) -> Delayed (env, t)
       | Unit -> Unit
       | U -> U
       | Nat -> Nat
