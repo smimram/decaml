@@ -225,4 +225,4 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
 
 and unify pos (ctx:Context.t) (a:ty) (b:ty) =
   if not @@ V.unify ctx.Context.level a b then
-    type_error pos "expression has type %s but %s expected" (to_string ctx a) (to_string ctx b)
+    type_error pos "expression has type %s but type %s was expected" (to_string ctx a) (to_string ctx b)

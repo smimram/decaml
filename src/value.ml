@@ -271,12 +271,15 @@ and unify_solve l m s t =
         (
           match IntMap.find_opt n pren.ren with
           | Some n' -> aux_spine pren (Var (pren.dom-1-n')) s
-          | None -> raise Unification (* we have an escaping variable *)
+          | None ->
+            Printf.printf "escaping variable %d\n%!" n;
+            (* we have an escaping variable *)
+            raise Unification
         )
       | Pi ((x,i,a),(env,t)) ->
         let t = eval ((var pren.cod)::env) t in
         Pi ((x,i,aux pren a), aux (lift pren) t)
-      | Fix (_env, _t) -> failwith "TODO"
+      | Fix (_env, _t) -> failwith "TODO: rename fix"
       | Type -> Type
       | Unit -> Unit
       | U -> U
