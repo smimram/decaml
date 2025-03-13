@@ -135,10 +135,10 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
         if i <> i' then failwith "TODO: support implicit parameters";
         a,(env,b)
       | _ ->
-        (* type_error tpos "term has type %s but a function was expected" @@ V.to_string c *)
+        (* We use unification here because c might be a metavariable. *)
         let a = fresh_meta ctx in
-        let b = fresh_meta (Context.bind ctx "x" (V.eval ctx.environment a)) in
-        let c' = V.eval ctx.environment (Pi(("x",i,a),b)) in
+        let b = fresh_meta (Context.bind ctx "x#" (V.eval ctx.environment a)) in
+        let c' = V.eval ctx.environment (Pi(("x#",i,a),b)) in
         unify tpos ctx c c';
         (
           match V.force c' with
@@ -224,5 +224,6 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     t
 
 and unify pos (ctx:Context.t) (a:ty) (b:ty) =
+  (* Printf.printf "*** unify %s with %s\n%!" (to_string ctx a) (to_string ctx b); *)
   if not @@ V.unify ctx.Context.level a b then
     type_error pos "expression has type %s but type %s was expected" (to_string ctx a) (to_string ctx b)

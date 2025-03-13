@@ -236,7 +236,7 @@ and unify_spines l s s' =
   unify_check (List.length s = List.length s');
   List.iter2 (fun (i,t) (i',t') -> unify_check (i = i'); unify l t t') s s'
 
-(** Given a context Γ, make sure that a meta-variable ?α applied to the spine s equals to a term t. *)
+(** Given a context Γ (in l), make sure that a meta-variable ?α (in m) applied to the spine s equals to a term t. *)
 and unify_solve l m s t =
   (* Printf.printf "***solve ?%d\n" m.id; *)
   (* From Γ and the spine, we construct a partial renaming from Γ to Δ (ie a partial function from the variables of Δ to those of Γ *)

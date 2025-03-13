@@ -20,7 +20,7 @@ let n = id 2
 
 let n = id {nat} 2
 
-let app {a} f (x : a) = f x
+let app {a b} (f : a -> b) x = f x
 
 let list : type -> type = fun a -> (l : type) -> (a -> l -> l) -> l -> l
 let nil : {a} -> list a = fun l cons nil -> nil
