@@ -87,6 +87,7 @@ let rec insert ctx (t:term) (a:ty) =
   | _ -> t, a
 
 let rec infer (ctx:Context.t) (t:preterm) : term * ty =
+  (* Printf.printf "*** infer %s\n%!" (P.to_string t); *)
   let pos = t.pos in
   match t.desc with
   | Let (x,a,t,u) ->
@@ -165,15 +166,18 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let b = check (Context.bind ctx x (eval ctx a)) b Type in
     Pi ((x,i,a),b), Type
   | Fix t ->
-    (* Extend the context of a meta-variable to ignore a bound variable. *)
-    let lift_meta = function
-      | InsertedMeta (m, bds) -> InsertedMeta (m, `Defined::bds)
+    let t, c = infer ctx t in
+    (
+      match c with
+      | Pi ((_,`Explicit,a),(env,b)) ->
+        let b =
+          let f = V.Fix ((env,t), []) in
+          V.eval (f::env) b
+        in
+        unify pos ctx b a;
+        Fix t, a
       | _ -> assert false
-    in
-    let a = fresh_meta ctx in
-    let va = eval ctx a in
-    let t = check ctx t (V.arr va @@ lift_meta a) in
-    t, va
+    )
   | Hole ->
     let t = fresh_meta ctx in
     let a = eval ctx @@ fresh_meta ctx in
