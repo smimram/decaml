@@ -37,17 +37,21 @@ recursive:
   | { false }
 
 args:
-  | arg args { $1 :: $2 }
+  | arg args { $1 @ $2 }
   | { [] }
 
 arg:
-  | LPAR x=IDENT a=opttype RPAR { (x, `Explicit, a) }
-  | LACC x=IDENT a=opttype RACC { (x, `Implicit, a) }
-  | x=IDENT { (x, `Explicit, None) }
+  | LPAR x=IDENT a=opttype RPAR { [x, `Explicit, a] }
+  | LACC xx=idents a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
+  | x=IDENT { [x, `Explicit, None] }
 
 opttype:
   | COLON expr { Some $2 }
   | { None }
+
+piargs:
+  | piarg piargs { $1 @ $2 }
+  | piarg { $1 }
 
 piarg:
   | LPAR x=IDENT COLON a=expr RPAR { [(x, `Explicit, Some a)] }
@@ -55,13 +59,14 @@ piarg:
 
 expr:
   | a=aexpr TO b=expr { arr ~pos:$loc a b }
-  | a=piarg TO b=expr { pis ~pos:$loc a b }
+  | a=piargs TO b=expr { pis ~pos:$loc a b }
   | FUN x=args TO t=expr { abss ~pos:$loc x t }
   | aexpr { $1 }
 
 // Application
 aexpr:
   | aexpr sexpr { mk ~pos:$loc (App ($1, (`Explicit, $2))) }
+  | aexpr LACC expr RACC { mk ~pos:$loc (App ($1, (`Implicit, $3))) }
   | sexpr { $1 }
 
 // Simple expression

@@ -18,12 +18,22 @@ let id {a : type} (x : a) = x
 
 let n = id 2
 
+let n = id {nat} 2
+
 let list : type -> type = fun a -> (l : type) -> (a -> l -> l) -> l -> l
 let nil : {a} -> list a = fun l cons nil -> nil
 let cons : {a} -> a -> list a -> list a = fun x xs L cons nil -> cons x (xs L cons nil)
 let map : {a b} -> (a -> b) -> list a -> list b = fun {a} {b} f xs l c n -> xs l (fun a -> c (f a)) n
 let list0 : list nat = nil
 let list1 : list nat = cons 0 (cons 1 (cons 2 nil))
+
+(** Scott natural numbers. *)
+
+let nat {a b} : type = (s : a -> b) (z : b -> b) -> b -> b
+let zero {a b} : nat {a} {b} = fun s z -> z
+(* let succ {a b} (n : nat {a} {b}) : nat {a} {b} = fun s z -> s n *)
+(* let pred (n : nat) : nat = n id zero *)
+(* let rec add m n = fix  *)
 
 (*
 Local Variables: 
