@@ -1,11 +1,6 @@
 %{
 open Preterm
 open Module
-
-let cast ~pos a t =
-  match a with
-  | Some a -> mk ~pos (Cast (t, a))
-  | None -> t
 %}
 
 %token LET REC IN EQ COLON HOLE FUN TO
@@ -30,7 +25,7 @@ decl:
   | def { Def $1 }
 
 def:
-  | LET r=recursive f=IDENT args=args a=opttype EQ e=expr { (r, f, abss ~pos:$loc args (cast ~pos:$loc(a) a e)) }
+  | LET r=recursive f=IDENT args=args a=opttype EQ e=expr { (r, f, a, abss ~pos:$loc args e) }
 
 recursive:
   | REC { true }
