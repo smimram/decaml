@@ -1,10 +1,5 @@
 open Extlib
 
-module P = Preterm
-module T = Term
-module V = Value
-module M = Module
-
 let () =
   Printexc.record_backtrace true;
   let fname = Sys.argv.(1) in
@@ -32,21 +27,7 @@ let () =
   in
   let decls = Module.prelude decls in
   close_in ic;
-  try
-    ignore @@
-    List.fold_left
-      (fun ctx (decl : M.decl) ->
-         match decl with
-         | Def (r,x,t) ->
-           let t = if r then P.mk (Fix (P.mk (Abs ((x,`Implicit,None),t)))) else t in
-           (* Printf.printf "%s = %s\n%!" x (Preterm.to_string t); *)
-           let t, a = Lang.infer ctx t in
-           Printf.printf "%s : %s\n%!" x (Lang.to_string ctx a);
-           Printf.printf "%s = %s\n%!" x (T.to_string (Lang.Context.variables ctx) t);
-           print_newline ();
-           (* Lang.Context.bind ctx x a *)
-           Lang.Context.define ctx x (V.eval ctx.environment t) a
-      ) Lang.Context.empty decls
+  try ignore @@ Module.eval Lang.Context.empty decls
   with
   | Lang.Type_error (pos, e) ->
     Printf.printf "Type error at %s:\n%s\n%!" (Pos.to_string pos) e;

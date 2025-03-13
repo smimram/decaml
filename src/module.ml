@@ -2,6 +2,7 @@
 
 module P = Preterm
 module T = Term
+module V = Value
 
 open P
 
@@ -20,3 +21,16 @@ let prelude (d:t) : t =
   def "Z" Z @@
   def "S" S @@
   d
+
+let eval_decl ctx = function
+  | Def (r,x,t) ->
+    let t = if r then P.mk (Fix (P.mk (Abs ((x,`Implicit,None),t)))) else t in
+    (* Printf.printf "%s = %s\n%!" x (Preterm.to_string t); *)
+    let t, a = Lang.infer ctx t in
+    Printf.printf "%s : %s\n%!" x (Lang.to_string ctx a);
+    Printf.printf "%s = %s\n%!" x (T.to_string (Lang.Context.variables ctx) t);
+    print_newline ();
+    (* Lang.Context.bind ctx x a *)
+    Lang.Context.define ctx x (V.eval ctx.environment t) a
+
+let eval ctx (m : t) = List.fold_left eval_decl ctx m
