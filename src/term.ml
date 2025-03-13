@@ -11,6 +11,7 @@ type t =
   | Pi of (string * icit * ty) * t
   | Meta of meta
   | InsertedMeta of meta * [`Bound | `Defined] list
+  | Fix of t
   | Type (** the type of types *)
 
   | Unit | U
@@ -34,6 +35,7 @@ let rec to_string vars = function
   | Pi ((x,i,a),b) ->
     let x = icit_pa i (x ^ " : " ^ to_string vars a) in
     Printf.sprintf "%s -> %s" x (to_string (x::vars) b)
+  | Fix t -> "fix" ^ to_string vars t
   | Type -> "type"
   | Meta m -> "?" ^ string_of_int m
   | InsertedMeta (m,_) -> "?" ^ string_of_int m

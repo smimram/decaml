@@ -10,6 +10,7 @@ type t =
   | Var of level * spine (* a variable applied to arguments *)
   | Meta of meta * spine
   | Pi of (string * icit * ty) * closure
+  | Fix of closure * spine
   | Type
 
   | Unit | U
@@ -112,6 +113,7 @@ let rec eval (env:environment) (t:term) =
   | Pi ((x,i,a),b) ->
     let a = eval env a in
     Pi ((x,i,a),(env,b))
+  | Fix t -> Fix ((env,t),[])
   | Meta m -> Meta (get_meta m, [])
   | InsertedMeta (m, bds) ->
     let m = get_meta m in
@@ -152,11 +154,11 @@ let rec force = function
 
 (** Reify a value as a term. *)
 let rec quote l (t:t) : term =
-  let rec app_spine t : spine -> term = function
+  let rec app_spine (t : term) : spine -> term = function
     | (i,u)::s -> App (app_spine t s, (i, quote l u))
     | [] -> t
   in
-  let rec app_explicit_spine t : t list -> term = function
+  let rec app_explicit_spine (t : term) : t list -> term = function
     | u::s -> App (app_explicit_spine t s, (`Explicit, quote l u))
     | [] -> t
   in
@@ -170,6 +172,9 @@ let rec quote l (t:t) : term =
     let a = quote l a in
     let b = quote (l+1) @@ eval ((var l)::env) b in
     Pi ((x,i,a),b)
+  | Fix ((env,t),s) ->
+    let t = Term.Fix (quote (l+2) (eval ((var (l+1))::(var l)::env) t)) in
+    app_spine t s
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type
@@ -253,7 +258,7 @@ and unify_solve l m s t =
     { dom = pren.dom+1; cod = pren.cod+1; ren = IntMap.add pren.cod pren.dom pren.ren }
   in
   (* Apply a partial renaming to a value. Along the way, we also make sure that the metavariable does not occur in the term (occurs check). *)
-  let rename m pren (t : value) =
+  let rename m pren (t : value) : term =
     let rec aux pren : value -> term = function
       | Meta (m',s) ->
         unify_check (m <> m'); (* occurs check *)
@@ -270,6 +275,7 @@ and unify_solve l m s t =
       | Pi ((x,i,a),(env,t)) ->
         let t = eval ((var pren.cod)::env) t in
         Pi ((x,i,aux pren a), aux (lift pren) t)
+      | Fix (_env, _t) -> failwith "TODO"
       | Type -> Type
       | Unit -> Unit
       | U -> U
