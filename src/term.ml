@@ -29,7 +29,7 @@ let rec to_string ?(pa=false) vars t =
   | Let (x,a,t,u) ->
     pa @@ Printf.sprintf "let %s : %s = %s in\n%s" x (to_string vars a) (to_string vars t) (to_string vars u)
   | Abs ((x,i),t) ->
-    let x = icit_pa i x in
+    let x = if i = `Implicit then icit_pa i x else x in
     pa @@ Printf.sprintf "fun %s -> %s" x (to_string (x::vars) t)
   | App (t,(i,u)) ->
     let u =
@@ -40,8 +40,11 @@ let rec to_string ?(pa=false) vars t =
     pa @@ (to_string vars t ^ " " ^ u)
   | Var n -> if n < 0 then Printf.sprintf "x#%d" n else List.nth vars n
   | Pi ((x,i,a),b) ->
-    let x' = icit_pa i (x ^ " : " ^ to_string vars a) in
-    pa @@ Printf.sprintf "%s -> %s" x' (to_string (x::vars) b)
+    if x = "_" && i = `Explicit then
+      pa (to_string ~pa:true vars a ^ " -> " ^ to_string ("_"::vars) b)
+    else
+      let x' = icit_pa i (x ^ " : " ^ to_string vars a) in
+      pa @@ Printf.sprintf "%s -> %s" x' (to_string (x::vars) b)
   | Fix t -> pa ("fix " ^ to_string vars t)
   | Type -> "type"
   | Meta m -> "?" ^ string_of_int m

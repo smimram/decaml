@@ -56,6 +56,8 @@ expr:
   | a=aexpr TO b=expr { arr ~pos:$loc a b }
   | a=piargs TO b=expr { pis ~pos:$loc a b }
   | FUN x=args TO t=expr { abss ~pos:$loc x t }
+/* | LPAR IDENT COLON expr RPAR { mk ~pos:$loc (Cast (mk ~pos:$loc($2) (Var $2), $4)) } */
+  | def IN u=expr { let (r, f, a, t) = $1 in assert (r = false); mk ~pos:$loc (Let (f, a, t, u)) }
   | aexpr { $1 }
 
 // Application
@@ -72,7 +74,6 @@ sexpr:
   | INT { nat ~pos:$loc $1 }
   | LPAR RPAR {mk ~pos:$loc U }
   | LPAR expr RPAR { $2 }
-  /* | def IN expr { let (f, t) = $1 in mk ~pos:$loc (Let (f, None, t, $3)) } */
 
 idents:
   | IDENT idents { $1::$2 }

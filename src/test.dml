@@ -30,7 +30,9 @@ let cons : {a} -> a -> list a -> list a = fun x xs cons nil -> cons x (xs cons n
 let map : {a b} -> (a -> b) -> list a -> list b = fun {a} {b} f xs c n -> xs (fun a -> c (f a)) n
 let list0 : list nat = nil
 let list1 : list nat = cons 0 (cons 1 (cons 2 nil))
-let rec length : {a} -> list a -> nat = fun (l : list a) -> l (fun x (l : list a) -> S (length l)) Z
+let length : {a} -> list a -> nat = fun l -> Z
+(* let rec length : {a} -> list a -> nat = fun (l : list a) -> Z *)
+(* let rec length : {a} -> list a -> nat = fun (l : list a) -> l {nat} (fun x (l : list a) -> S (length l)) Z *)
 
 (* (\** Scott natural numbers. *\) *)
 
