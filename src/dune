@@ -4,6 +4,7 @@
 
 (executable
  (name decaml)
+ (preprocess (pps ppx_deriving.show))
 )
 
 (rule

@@ -2,8 +2,10 @@ open Common
 open Extlib
 
 type level = int
+[@@deriving show]
 
 type term = Term.t
+[@@deriving show]
 
 type t =
   | Abs of (string * icit) * closure
@@ -15,6 +17,7 @@ type t =
 
   | Unit | U
   | Nat | Z | S of t option | Ind_nat of t list
+[@@deriving show]
 
 and ty = t
 
@@ -147,7 +150,7 @@ and app (t:t) (i,u) =
   | Fix ((env,t),[]) as fix when is_abs u -> eval (u::fix::env) t
   | Fix (t,s) -> Fix (t,(i,u)::s)
   | S None -> S (Some u)
-  | _ -> failwith "TODO: unhandled app"
+  | _ -> failwith "TODO: unhandled app %s" @@ show t
 
 (** Apply a value to a spine. *)
 and app_spine (t:value) = function

@@ -18,6 +18,7 @@ type t =
 
   | Nat
   | Z | S | Ind_nat
+[@@deriving show]
 
 and ty = t
 
