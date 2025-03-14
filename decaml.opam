@@ -8,12 +8,13 @@ license: "GPL-3.0-or-later"
 homepage: "https://github.com/smimram/decaml"
 bug-reports: "https://github.com/smimram/decaml/issues"
 depends: [
-  "dune" {>= "2.0"}
+  "dune" {>= "3.13"}
   "ocaml"
   "menhir"
+  "odoc" {with-doc}
 ]
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   [
     "dune"
     "build"

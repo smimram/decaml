@@ -35,7 +35,7 @@ and inductive =
   {
     name : string; (** name *)
     parameters : (string * icit * ty) list;
-    indices : ty list;
+    ty : ty;
     constructors : (string * ty) list; (** constructors with given name and types *)
   }
 

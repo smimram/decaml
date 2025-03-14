@@ -3,7 +3,7 @@ open Preterm
 open Module
 %}
 
-%token LET REC IN EQ COLON HOLE FUN TO
+%token LET REC IN EQ COLON HOLE FUN TO INDUCTIVE
 %token MATCH WITH BAR
 %token LPAR RPAR LACC RACC
 %token TYPE
@@ -24,6 +24,14 @@ decls:
 
 decl:
   | def { Def $1 }
+  | INDUCTIVE name=IDENT ty=opttype EQ constructors=constructors { Ind { name; parameters=[]; ty = Option.value ~default:(mk ~pos:$loc(ty) Type) ty; constructors } }
+
+constructors:
+  | constructor constructors { $1::$2 }
+  | { [] }
+
+constructor:
+  | BAR c=IDENT COLON ty=expr { (c,ty) }
 
 def:
   | LET r=recursive f=IDENT args=args a=opttype EQ e=expr { (r, f, Option.map (pis ~pos:$loc args) a, abss ~pos:$loc args e) }

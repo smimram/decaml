@@ -17,11 +17,9 @@ type t = decl list
 (** Add standard prelude. *)
 let prelude (d:t) : t =
 let def x t d = (Def (false, x, None, mk t))::d in
-  let ind name ?(parameters=[]) ?(indices=[]) constructors d =
-    (Ind {P.name; parameters; indices; constructors})::d
-  in
-  ind "unit" ["U", mk (Var "unit")] @@
-  ind "bool" ["true", mk (Var "bool"); "false", mk (Var "bool")] @@
+  (* let ind name parameters ty constructors d = (Ind {P.name; parameters; ty; constructors})::d in *)
+  (* ind "unit" [] (mk Type) ["U", mk (Var "unit")] @@ *)
+  (* ind "bool" [] (mk Type) ["true", mk (Var "bool"); "false", mk (Var "bool")] @@ *)
   def "nat" Nat @@
   def "Z" Z @@
   def "S" S @@
@@ -49,9 +47,9 @@ let eval_decl ctx d =
     (* Context.bind ctx x a *)
     Context.define ctx x (V.eval ctx.environment t) a
   | Ind ind ->
-    Printf.printf "inductive %s\n%!" ind.Preterm.name;
-    (* TODO: add arguments to the type (below and in ty) *)
-    let ty = V.Type in
+    Printf.printf "inductive %s : %s\n\n%!" ind.Preterm.name (String.concat " | " @@ List.map fst ind.constructors);
+    (* TODO: add arguments parameters to the type *)
+    let ty = eval ctx @@ check ctx ind.ty Type in
     let rec inductive () : V.inductive =
       let id = V.fresh_ind () in
       let me = V.Ind (ind.Preterm.name, id, inductive) in
@@ -63,8 +61,9 @@ let eval_decl ctx d =
         constructors =
           List.map
             (fun (c,a) ->
-               Printf.printf "check %s\n%!" (P.to_string a);
+               (* Printf.printf "check %s\n%!" (P.to_string a); *)
                let a = check ctx a Type in
+               (* Printf.printf "checked\n%!"; *)
                c, eval ctx a
             ) ind.constructors;
       }

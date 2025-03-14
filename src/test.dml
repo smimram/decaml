@@ -41,6 +41,13 @@ let rec length : {a} -> list a -> nat = fun (l : list a) -> l (fun _ n -> S n) Z
 
 let n = length list3
 
+inductive unit =
+  | uu : unit
+
+inductive bool =
+  | true : bool
+  | false : bool
+
 let b = bool
 let b = true
 
