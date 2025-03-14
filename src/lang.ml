@@ -173,7 +173,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
       match c with
       | Pi ((_,`Explicit,a),(env,b)) ->
         let b =
-          let f = V.Fix ((env,t), []) in
+          let f = V.fix @@ eval ctx t in
           V.eval (f::env) b
         in
         unify pos ctx b a;

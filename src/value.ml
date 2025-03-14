@@ -12,7 +12,7 @@ type t =
   | Var of level * spine (* a variable applied to arguments *)
   | Meta of meta * spine
   | Pi of (string * icit * ty) * closure
-  | Fix of closure * spine
+  | Fix of t * spine
   | Type
 
   | Unit | U
@@ -91,6 +91,8 @@ let var x = Var (x, [])
 (** Create a (non-dependent) arrow. *)
 let arr a b = Pi (("_", `Explicit, a), ([], b))
 
+let fix t = Fix (t, [])
+
 (** Generate a fresh variable name. *)
 let fresh_var_name =
   let h = Hashtbl.create 100 in
@@ -101,6 +103,7 @@ let fresh_var_name =
 
 (** Evaluate a term to a value. *)
 let rec eval (env:environment) (t:term) =
+  (* Printf.printf "*** eval %s\n" @@ Term.to_string [] t; *)
   let t0 = t in
   match t with
   | Let (_,_,t,u) ->
@@ -117,7 +120,7 @@ let rec eval (env:environment) (t:term) =
   | Pi ((x,i,a),b) ->
     let a = eval env a in
     Pi ((x,i,a),(env,b))
-  | Fix t -> Fix ((env,t),[])
+  | Fix t -> Fix (eval env t,[])
   | Meta m -> Meta (get_meta m, [])
   | InsertedMeta (m, bds) ->
     let m = get_meta m in
@@ -147,7 +150,7 @@ and app (t:t) (i,u) =
   | Abs ((_,i'), (env,t)) -> assert (i = i'); eval (u::env) t
   | Var (x,s) -> Var (x, (i,u)::s)
   | Meta (m,s) -> Meta (m,(i,u)::s)
-  | Fix ((env,t),[]) as fix when is_abs u -> eval (u::fix::env) t
+  | Fix (t,s) when is_abs u -> app_spine (app t (`Explicit, fix t)) s
   | Fix (t,s) -> Fix (t,(i,u)::s)
   | S None -> S (Some u)
   | _ -> failwith "TODO: unhandled app %s" @@ show t
@@ -183,9 +186,8 @@ let rec quote l (t:t) : term =
     let a = quote l a in
     let b = quote (l+1) @@ eval ((var l)::env) b in
     Pi ((x,i,a),b)
-  | Fix ((env,t),s) ->
-    let t = Term.Fix (quote l @@ eval env t) in
-    app_spine t s
+  | Fix (t,s) ->
+    app_spine (Term.Fix (quote l t)) s
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type

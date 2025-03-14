@@ -39,7 +39,7 @@ let rec to_string ?(pa=false) vars t =
       | `Implicit -> icit_pa i @@ to_string vars u
     in
     pa @@ (to_string vars t ^ " " ^ u)
-  | Var n -> if n < 0 then Printf.sprintf "x#%d" n else List.nth vars n
+  | Var n -> if n < 0 || n >= List.length vars then Printf.sprintf "x#%d" n else List.nth vars n
   | Pi ((x,i,a),b) ->
     if x = "_" && i = `Explicit then
       pa (to_string ~pa:true vars a ^ " -> " ^ to_string ("_"::vars) b)
