@@ -184,7 +184,7 @@ let rec quote l (t:t) : term =
     let b = quote (l+1) @@ eval ((var l)::env) b in
     Pi ((x,i,a),b)
   | Fix ((env,t),s) ->
-    let t = Term.Fix (quote (l+2) (eval ((var (l+1))::(var l)::env) t)) in
+    let t = Term.Fix (quote l @@ eval env t) in
     app_spine t s
   | Meta (m, s) ->
     app_spine (Meta m.id) s

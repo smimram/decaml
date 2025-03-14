@@ -32,9 +32,9 @@ let list0 : list nat = nil
 let list3 : list nat = cons 0 (cons 1 (cons 2 nil))
 (* let length : {a} -> list a -> nat = fun l -> Z *)
 (* let rec length : {a} -> list a -> nat = fun l -> Z *)
-(* let rec length : {a} -> list a -> nat = fun (l : list a) -> l {nat} (fun _ n -> S n) Z *)
+let rec length : {a} -> list a -> nat = fun (l : list a) -> l (fun _ n -> S n) Z
 
-(* let n = length list3 *)
+let n = length list3
 
 let r0 {a} (x : a) = Z
 let rec r1 (a : type) (x : a) : nat = Z
