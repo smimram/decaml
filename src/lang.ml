@@ -70,7 +70,7 @@ module Context = struct
 
   (** Declare an inductive type. *)
   let inductive ctx (ind : V.inductive) =
-    let ctx = define ctx ind.name ind.ty (Ind (fun () -> ind)) in
+    let ctx = define ctx ind.name ind.ty (Ind (ind.name, fun () -> ind)) in
     { ctx with inductive = ind :: ctx.inductive }
 
   (** Find the inductive type associated to a constructor. *)

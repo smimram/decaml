@@ -48,9 +48,9 @@ let eval_decl ctx d =
     (* Context.bind ctx x a *)
     Context.define ctx x (V.eval ctx.environment t) a
   | Ind ind ->
-    Printf.printf "inductive %s" ind.Preterm.name;
+    Printf.printf "inductive %s\n%!" ind.Preterm.name;
     let rec inductive () : V.inductive =
-      let me = V.Ind inductive in
+      let me = V.Ind (ind.Preterm.name, inductive) in
       (* TODO: add arguments to ty *)
       let ty = V.Type in
       let ctx = Context.define ctx ind.name ty me in

@@ -14,7 +14,7 @@ type t =
   | Pi of (string * icit * ty) * closure
   | Fix of t * spine
   | Type
-  | Ind of (unit -> inductive)
+  | Ind of string * (unit -> inductive)
   | Ind_elim of inductive
 
   | Nat | Z | S of t option | Ind_nat of t list
@@ -208,7 +208,7 @@ let rec quote l (t:t) : term =
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type
-  | Ind ind -> Ind (ind()).name
+  | Ind (ind, _) -> Ind ind
   | Ind_elim ind ->
     let ind : Term.inductive =
       {
