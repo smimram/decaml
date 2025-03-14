@@ -46,7 +46,7 @@ let rec to_string ?(pa=false) vars t =
     else
       let x' = icit_pa i (x ^ " : " ^ to_string vars a) in
       pa @@ Printf.sprintf "%s -> %s" x' (to_string (x::vars) b)
-  | Fix t -> pa ("fix " ^ to_string vars t)
+  | Fix t -> pa ("fix " ^ to_string ~pa:true vars t)
   | Type -> "type"
   | Meta m -> "?" ^ string_of_int m
   | InsertedMeta (m,_) -> "?" ^ string_of_int m
