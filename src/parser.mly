@@ -24,11 +24,7 @@ decls:
 
 decl:
   | def { Def $1 }
-  | INDUCTIVE name=IDENT ty=opttype EQ constructors=constructors { Ind { name; parameters=[]; ty = Option.value ~default:(mk ~pos:$loc(ty) Type) ty; constructors } }
-
-constructors:
-  | constructor constructors { $1::$2 }
-  | { [] }
+  | INDUCTIVE name=IDENT ty=opttype EQ constructors=list(constructor) { Ind { name; parameters=[]; ty = Option.value ~default:(mk ~pos:$loc(ty) Type) ty; constructors } }
 
 constructor:
   | BAR c=IDENT COLON ty=expr { (c,ty) }
