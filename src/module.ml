@@ -37,6 +37,7 @@ let eval_decl ctx = function
     in
     Printf.printf "%s : %s\n%!" x (Lang.to_string ctx a);
     Printf.printf "%s = %s\n%!" x (T.to_string (Lang.Context.variables ctx) t);
+    Printf.printf "%s = %s\n%!" x (T.to_string (Lang.Context.variables ctx) (Lang.normalize ctx t));
     print_newline ();
     (* Lang.Context.bind ctx x a *)
     Lang.Context.define ctx x (V.eval ctx.environment t) a

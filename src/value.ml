@@ -98,6 +98,7 @@ let fresh_var_name =
 
 (** Evaluate a term to a value. *)
 let rec eval (env:environment) (t:term) =
+  let t0 = t in
   match t with
   | Let (_,_,t,u) ->
     let t = eval env t in
@@ -122,7 +123,7 @@ let rec eval (env:environment) (t:term) =
       | Some t -> t
       | None -> Meta (m, [])
     in
-    assert (List.length env = List.length bds);
+    if List.length env <> List.length bds then failwith "bad environment for %s (%d / %d)" (Term.to_string [] t0) (List.length env) (List.length bds);
     let s = List.filter_map2 (fun t d -> if d = `Bound then Some (`Explicit, t) else None) env bds in
     app_spine t s
   | Type -> Type
@@ -135,10 +136,16 @@ let rec eval (env:environment) (t:term) =
 
 (** Apply a value to another. *)
 and app (t:t) (i,u) =
+  let is_abs = function
+    | Abs _ -> true
+    | _ -> false
+  in
   match t with
   | Abs ((_,i'), (env,t)) -> assert (i = i'); eval (u::env) t
   | Var (x,s) -> Var (x, (i,u)::s)
   | Meta (m,s) -> Meta (m,(i,u)::s)
+  | Fix ((env,t),[]) as fix when is_abs u -> eval (u::fix::env) t
+  | Fix (t,s) -> Fix (t,(i,u)::s)
   | S None -> S (Some u)
   | _ -> failwith "TODO: unhandled app"
 

@@ -73,6 +73,8 @@ let eval ctx (t : term) : value = V.eval ctx.Context.environment t
 
 let quote ctx (t : value) : term = V.quote ctx.Context.level t
 
+let normalize ctx t = quote ctx @@ eval ctx t
+
 let to_string ctx t = T.to_string (Context.variables ctx) @@ quote ctx t
 
 (** Apply all implicit arguments to metavariables. *)
@@ -232,7 +234,8 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     Let (x,a,t,u)
 
   | Fix t, b ->
-    check ctx t (V.arr b (quote ctx b))
+    let t = check ctx t (V.arr b (quote ctx b)) in
+    Fix t
 
   | _, a' ->
     let t, a = infer ctx t in

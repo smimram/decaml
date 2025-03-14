@@ -39,6 +39,7 @@ arg:
   | LPAR x=IDENT a=opttype RPAR { [x, `Explicit, a] }
   | LACC xx=idents a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
   | x=IDENT { [x, `Explicit, None] }
+  | HOLE { ["_", `Explicit, None] }
 
 opttype:
   | COLON expr { Some $2 }
