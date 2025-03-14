@@ -69,7 +69,8 @@ module Context = struct
   let close ctx (t:value) : V.closure = ctx.environment, V.quote (ctx.level + 1) t
 
   (** Declare an inductive type. *)
-  let inductive ctx ind =
+  let inductive ctx (ind : V.inductive) =
+    let ctx = define ctx ind.name ind.ty (Ind (fun () -> ind)) in
     { ctx with inductive = ind :: ctx.inductive }
 
   (** Find the inductive type associated to a constructor. *)

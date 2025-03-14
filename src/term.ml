@@ -13,6 +13,7 @@ type t =
   | InsertedMeta of meta * [`Bound | `Defined] list
   | Fix of t
   | Type (** the type of types *)
+  | Ind of string
   | Ind_elim of inductive
 
   | Nat
@@ -56,6 +57,7 @@ let rec to_string ?(pa=false) vars t =
   | Type -> "type"
   | Meta m -> "?" ^ string_of_int m
   | InsertedMeta (m,_) -> "?" ^ string_of_int m
+  | Ind ind -> ind
   | Ind_elim ind -> ind.name ^ "_elim"
   | Nat -> "nat"
   | Z -> "Z"

@@ -14,6 +14,7 @@ type t =
   | Pi of (string * icit * ty) * closure
   | Fix of t * spine
   | Type
+  | Ind of (unit -> inductive)
   | Ind_elim of inductive
 
   | Nat | Z | S of t option | Ind_nat of t list
@@ -140,6 +141,7 @@ let rec eval (env:environment) (t:term) =
     let s = List.filter_map2 (fun t d -> if d = `Bound then Some (`Explicit, t) else None) env bds in
     app_spine t s
   | Type -> Type
+  | Ind _ind -> failwith "TODO: eval ind"
   | Ind_elim ind ->
     let ind =
       {
@@ -206,6 +208,7 @@ let rec quote l (t:t) : term =
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type
+  | Ind ind -> Ind (ind()).name
   | Ind_elim ind ->
     let ind : Term.inductive =
       {
@@ -314,6 +317,7 @@ and unify_solve l m s t =
         Pi ((x,i,aux pren a), aux (lift pren) t)
       | Fix (_env, _t) -> failwith "TODO: rename fix"
       | Type -> Type
+      | Ind _ -> failwith "TODO"
       | Ind_elim ind -> Ind_elim { name = ind.name; ty = aux pren ind.ty; constructors = List.map (fun (c,a) -> c, aux pren a) ind.constructors }
       | Nat -> Nat
       | Z -> Z
