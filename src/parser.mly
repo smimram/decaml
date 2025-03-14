@@ -46,7 +46,7 @@ args:
 
 arg:
   | LPAR x=IDENT a=opttype RPAR { [x, `Explicit, a] }
-  | LACC xx=idents a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
+  | LACC xx=list(IDENT) a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
   | x=IDENT { [x, `Explicit, None] }
   | HOLE { ["_", `Explicit, None] }
 
@@ -60,7 +60,7 @@ piargs:
 
 piarg:
   | LPAR x=IDENT COLON a=expr RPAR { [(x, `Explicit, Some a)] }
-  | LACC xx=idents a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
+  | LACC xx=list(IDENT) a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
 
 expr:
   | a=aexpr TO b=expr { arr ~pos:$loc a b }
@@ -68,6 +68,7 @@ expr:
   | FUN x=args TO t=expr { abss ~pos:$loc x t }
 /* | LPAR IDENT COLON expr RPAR { mk ~pos:$loc (Cast (mk ~pos:$loc($2) (Var $2), $4)) } */
   | def IN u=expr { let (r, f, a, t) = $1 in assert (r = false); mk ~pos:$loc (Let (f, a, t, u)) }
+  | MATCH t=expr WITH cases=cases { mk ~pos:$loc (Match (t, cases)) }
   | aexpr { $1 }
 
 // Application
@@ -85,6 +86,10 @@ sexpr:
   | LPAR RPAR {mk ~pos:$loc (Var "uu") }
   | LPAR expr RPAR { $2 }
 
-idents:
-  | IDENT idents { $1::$2 }
-  | IDENT { [$1] }
+cases:
+  /* | case cases { $1::$2 } */
+  | { [] }
+
+/* case: */
+/* | BAR c=IDENT xx=idents TO t=expr { (c, abss ~pos:$loc(t) (List.map (fun x -> x, `Explicit, None) xx) t) } */
+/* | { [] } */

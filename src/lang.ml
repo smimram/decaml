@@ -214,7 +214,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   | Match (_t, l) ->
     let _ind =
       if l = [] then failwith "empty elimination not supported yet";
-      let c = fst3 @@ List.hd l in
+      let c = fst @@ List.hd l in
       match Context.find_constructor ctx c with
       | Some ind -> ind
       | None -> failwith "unknown constructor %s" c
