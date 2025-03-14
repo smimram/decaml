@@ -49,17 +49,18 @@ let eval_decl ctx d =
     Context.define ctx x (V.eval ctx.environment t) a
   | Ind ind ->
     Printf.printf "inductive %s\n%!" ind.Preterm.name;
+    (* TODO: add arguments to the type (below and in ty) *)
+    let ty = V.Type in
     let rec inductive () : V.inductive =
       let me = V.Ind (ind.Preterm.name, inductive) in
-      (* TODO: add arguments to ty *)
-      let ty = V.Type in
-      let ctx = Context.define ctx ind.name ty me in
+      let ctx = Context.define ctx ind.name me ty in
       { Value.
         name = ind.name;
         ty = ty;
         constructors =
           List.map
             (fun (c,a) ->
+               Printf.printf "check %s\n%!" (P.to_string a);
                let a = check ctx a Type in
                c, eval ctx a
             ) ind.constructors;

@@ -14,7 +14,7 @@ type t =
   | Pi of (string * icit * ty) * closure
   | Fix of t * spine
   | Type
-  | Ind of string * (unit -> inductive)
+  | Ind of string * (unit -> inductive) (** type constructor of an inductive type *)
   | Ind_elim of inductive
 
   | Nat | Z | S of t option | Ind_nat of t list
@@ -38,7 +38,7 @@ and meta =
 and inductive =
   {
     name : string;
-    ty : ty;
+    ty : ty; (** type of the type constructor *)
     constructors : (string * ty) list;
   }
 
