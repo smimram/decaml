@@ -2,18 +2,22 @@ open Common
 open Extlib
 
 type level = int
+[@@deriving show]
 
 type term = Term.t
+[@@deriving show]
 
 type t =
   | Abs of (string * icit) * closure
   | Var of level * spine (* a variable applied to arguments *)
   | Meta of meta * spine
   | Pi of (string * icit * ty) * closure
+  | Fix of t * spine
   | Type
   | Ind_elim of inductive
 
   | Nat | Z | S of t option | Ind_nat of t list
+[@@deriving show]
 
 and ty = t
 
@@ -94,6 +98,8 @@ let var x = Var (x, [])
 (** Create a (non-dependent) arrow. *)
 let arr a b = Pi (("_", `Explicit, a), ([], b))
 
+let fix t = Fix (t, [])
+
 (** Generate a fresh variable name. *)
 let fresh_var_name =
   let h = Hashtbl.create 100 in
@@ -104,6 +110,8 @@ let fresh_var_name =
 
 (** Evaluate a term to a value. *)
 let rec eval (env:environment) (t:term) =
+  (* Printf.printf "*** eval %s\n" @@ Term.to_string [] t; *)
+  let t0 = t in
   match t with
   | Let (_,_,t,u) ->
     let t = eval env t in
@@ -119,6 +127,7 @@ let rec eval (env:environment) (t:term) =
   | Pi ((x,i,a),b) ->
     let a = eval env a in
     Pi ((x,i,a),(env,b))
+  | Fix t -> Fix (eval env t,[])
   | Meta m -> Meta (get_meta m, [])
   | InsertedMeta (m, bds) ->
     let m = get_meta m in
@@ -127,6 +136,7 @@ let rec eval (env:environment) (t:term) =
       | Some t -> t
       | None -> Meta (m, [])
     in
+    if List.length env <> List.length bds then failwith "bad environment for %s (%d / %d)" (Term.to_string [] t0) (List.length env) (List.length bds);
     let s = List.filter_map2 (fun t d -> if d = `Bound then Some (`Explicit, t) else None) env bds in
     app_spine t s
   | Type -> Type
@@ -146,12 +156,19 @@ let rec eval (env:environment) (t:term) =
 
 (** Apply a value to another. *)
 and app (t:t) (i,u) =
+  let is_abs = function
+    | Abs _ -> true
+    | _ -> false
+  in
   match t with
   | Abs ((_,i'), (env,t)) -> assert (i = i'); eval (u::env) t
   | Var (x,s) -> Var (x, (i,u)::s)
   | Meta (m,s) -> Meta (m,(i,u)::s)
+  | Fix (t,s) when is_abs u ->
+    app (app_spine (app t (`Explicit, fix t)) s) (i,u)
+  | Fix (t,s) -> Fix (t,(i,u)::s)
   | S None -> S (Some u)
-  | _ -> failwith "TODO: unhandled app"
+  | _ -> failwith "TODO: unhandled app %s" @@ show t
 
 (** Apply a value to a spine. *)
 and app_spine (t:value) = function
@@ -166,11 +183,11 @@ let rec force = function
 
 (** Reify a value as a term. *)
 let rec quote l (t:t) : term =
-  let rec app_spine t : spine -> term = function
+  let rec app_spine (t : term) : spine -> term = function
     | (i,u)::s -> App (app_spine t s, (i, quote l u))
     | [] -> t
   in
-  let rec app_explicit_spine t : t list -> term = function
+  let rec app_explicit_spine (t : term) : t list -> term = function
     | u::s -> App (app_explicit_spine t s, (`Explicit, quote l u))
     | [] -> t
   in
@@ -184,6 +201,8 @@ let rec quote l (t:t) : term =
     let a = quote l a in
     let b = quote (l+1) @@ eval ((var l)::env) b in
     Pi ((x,i,a),b)
+  | Fix (t,s) ->
+    app_spine (Term.Fix (quote l t)) s
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type
@@ -202,12 +221,12 @@ let rec quote l (t:t) : term =
   | S (Some t) -> App (S, (`Explicit, quote l t))
   | Ind_nat s -> app_explicit_spine Ind_nat s
 
-let to_string ?(vars=[]) t = Term.to_string ~vars @@ quote 0 t
+let to_string vars t = Term.to_string vars @@ quote (List.length vars) t
 
 let string_of_meta vars m =
   let m = get_meta m in
   match m.value with
-  | Some t -> to_string ~vars t
+  | Some t -> to_string vars t
   | None -> "?" ^ string_of_int m.id
 
 exception Unification
@@ -250,7 +269,7 @@ and unify_spines l s s' =
   unify_check (List.length s = List.length s');
   List.iter2 (fun (i,t) (i',t') -> unify_check (i = i'); unify l t t') s s'
 
-(** Given a context Γ, make sure that a meta-variable ?α applied to the spine s equals to a term t. *)
+(** Given a context Γ (in l), make sure that a meta-variable ?α (in m) applied to the spine s equals to a term t. *)
 and unify_solve l m s t =
   (* Printf.printf "***solve ?%d\n" m.id; *)
   (* From Γ and the spine, we construct a partial renaming from Γ to Δ (ie a partial function from the variables of Δ to those of Γ *)
@@ -273,7 +292,7 @@ and unify_solve l m s t =
     { dom = pren.dom+1; cod = pren.cod+1; ren = IntMap.add pren.cod pren.dom pren.ren }
   in
   (* Apply a partial renaming to a value. Along the way, we also make sure that the metavariable does not occur in the term (occurs check). *)
-  let rename m pren (t : value) =
+  let rename m pren (t : value) : term =
     let rec aux pren : value -> term = function
       | Meta (m',s) ->
         unify_check (m <> m'); (* occurs check *)
@@ -285,11 +304,15 @@ and unify_solve l m s t =
         (
           match IntMap.find_opt n pren.ren with
           | Some n' -> aux_spine pren (Var (pren.dom-1-n')) s
-          | None -> raise Unification (* we have an escaping variable *)
+          | None ->
+            Printf.printf "escaping variable %d\n%!" n;
+            (* we have an escaping variable *)
+            raise Unification
         )
       | Pi ((x,i,a),(env,t)) ->
         let t = eval ((var pren.cod)::env) t in
         Pi ((x,i,aux pren a), aux (lift pren) t)
+      | Fix (_env, _t) -> failwith "TODO: rename fix"
       | Type -> Type
       | Ind_elim ind -> Ind_elim { name = ind.name; ty = aux pren ind.ty; constructors = List.map (fun (c,a) -> c, aux pren a) ind.constructors }
       | Nat -> Nat
@@ -305,7 +328,7 @@ and unify_solve l m s t =
   in
   let t = rename m pren t in
   let solution = eval [] @@ Term.abss (List.mapi (fun n i -> "x" ^ string_of_int (n+1), i) @@ List.rev @@ List.map fst s) t in
-  Printf.printf "metavariable ?%d gets %s\n%!" m.id (to_string solution);
+  Printf.printf "metavariable ?%d gets %s\n%!" m.id (to_string [] solution);
   m.value <- Some solution
 
 let unify l t u =

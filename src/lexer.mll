@@ -1,7 +1,7 @@
 {
+open Extlib
 open Lexing
 open Parser
-open LexingUtils
 }
 
 let space = ' ' | '\t' | '\r'
@@ -11,6 +11,7 @@ let char = first_char | ['0'-'9']
 
 rule token = parse
   | "let" { LET }
+  | "rec" { REC }
   | "in" { IN }
   | "fun" { FUN }
   | "match" { MATCH }
@@ -19,7 +20,7 @@ rule token = parse
   | ":" { COLON }
   | "=" { EQ }
   | "->" { TO }
-  | "→" as s { utf8 s lexbuf; TO }
+  | "→" as s { Lexing.utf8 s lexbuf; TO }
   | "(" { LPAR }
   | ")" { RPAR }
   | "{" { LACC }

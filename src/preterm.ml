@@ -21,6 +21,7 @@ and desc =
   | Var of var
   | Pi of (var * icit * ty option) * t
   | Type (** the type of types *)
+  | Fix of t
   | Hole
   | Cast of t * ty (** ensure that a term has given type *)
   | Match of t * (string * t array * t) list
@@ -69,13 +70,11 @@ let rec nat ?pos n =
   else if n = 0 then mk ?pos Z
   else mk ?pos (App (mk ?pos S, (`Explicit, nat ?pos (n-1))))
 
-(*
-(** Let declaration. *)
-let letin ?pos x t a u =
-  let pos = Option.value ~default:a.pos pos in
-  mk ~pos (App (mk ~pos (Abs ((x, `Explicit, a), u)), (`Explicit, t)))
-*)
- 
+let is_fix t =
+  match t.desc with
+  | Fix _ -> true
+  | _ -> false
+
 let rec to_string ?(pa=false) e =
   let pa s = if pa then "("^s^")" else s in
   match e.desc with
@@ -100,6 +99,7 @@ let rec to_string ?(pa=false) e =
     pa (Printf.sprintf "%s -> %s" arg (to_string b))
   | Var x -> x
   | Hole -> "_"
+  | Fix t -> "fix " ^ to_string ~pa:true t
   | Cast (t,a) -> Printf.sprintf "(%s : %s)" (to_string t) (to_string a)
   | Type -> "type"
   | Match (t, l) ->

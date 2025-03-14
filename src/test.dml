@@ -18,12 +18,28 @@ let id {a : type} (x : a) = x
 
 let n = id 2
 
-let list : type -> type = fun a -> (l : type) -> (a -> l -> l) -> l -> l
-let nil : {a} -> list a = fun l cons nil -> nil
-let cons : {a} -> a -> list a -> list a = fun x xs L cons nil -> cons x (xs L cons nil)
-let map : {a b} -> (a -> b) -> list a -> list b = fun {a} {b} f xs l c n -> xs l (fun a -> c (f a)) n
+let n = id {nat} 2
+
+let app {a b} (f : a -> b) x = f x
+
+(* let app {a b} f (x : a) : b = f x *)
+
+let r0 {a} (x : a) = Z
+let rec r1 (a : type) (x : a) : nat = Z
+let rec r2 {a} (x : a) : nat = Z
+let rec r3 {a} (x : a) = Z
+
+let list : type -> type = fun a -> {l : type} -> (a -> l -> l) -> l -> l
+let nil : {a} -> list a = fun {l} cons nil -> nil
+let cons : {a} -> a -> list a -> list a = fun x xs cons nil -> cons x (xs cons nil)
+let map : {a b} -> (a -> b) -> list a -> list b = fun {a} {b} f xs c n -> xs (fun a -> c (f a)) n
 let list0 : list nat = nil
-let list1 : list nat = cons 0 (cons 1 (cons 2 nil))
+let list3 : list nat = cons 0 (cons 1 (cons 2 nil))
+(* let length : {a} -> list a -> nat = fun l -> Z *)
+(* let rec length : {a} -> list a -> nat = fun l -> Z *)
+let rec length : {a} -> list a -> nat = fun (l : list a) -> l (fun _ n -> S n) Z
+
+let n = length list3
 
 (*
 Local Variables: 
