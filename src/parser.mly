@@ -3,7 +3,7 @@ open Preterm
 open Module
 %}
 
-%token LET REC IN EQ COLON HOLE FUN TO INDUCTIVE
+%token LET REC IN EQ COLON HOLE FUN TO INDUCTIVE BEGIN END
 %token MATCH WITH BAR
 %token LPAR RPAR LACC RACC
 %token TYPE
@@ -64,7 +64,7 @@ expr:
   | FUN x=args TO t=expr { abss ~pos:$loc x t }
 /* | LPAR IDENT COLON expr RPAR { mk ~pos:$loc (Cast (mk ~pos:$loc($2) (Var $2), $4)) } */
   | def IN u=expr { let (r, f, a, t) = $1 in assert (r = false); mk ~pos:$loc (Let (f, a, t, u)) }
-  | MATCH t=expr WITH cases=cases { mk ~pos:$loc (Match (t, cases)) }
+  | MATCH t=expr WITH cases=list(case) { mk ~pos:$loc (Match (t, cases)) }
   | aexpr { $1 }
 
 // Application
@@ -81,11 +81,7 @@ sexpr:
   | INT { nat ~pos:$loc $1 }
   | LPAR RPAR {mk ~pos:$loc (Var "uu") }
   | LPAR expr RPAR { $2 }
+  | BEGIN expr END { $2 }
 
-cases:
-  /* | case cases { $1::$2 } */
-  | { [] }
-
-/* case: */
-/* | BAR c=IDENT xx=idents TO t=expr { (c, abss ~pos:$loc(t) (List.map (fun x -> x, `Explicit, None) xx) t) } */
-/* | { [] } */
+case:
+  | BAR c=IDENT xx=list(IDENT) TO t=expr { (c, abss ~pos:$loc(t) (List.map (fun x -> x, `Explicit, None) xx) t) }

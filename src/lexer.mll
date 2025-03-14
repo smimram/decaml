@@ -17,6 +17,8 @@ rule token = parse
   | "match" { MATCH }
   | "with" { WITH }
   | "inductive" { INDUCTIVE }
+  | "begin" { BEGIN }
+  | "end" { END }
   | "|" { BAR }
   | ":" { COLON }
   | "=" { EQ }

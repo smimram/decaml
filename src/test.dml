@@ -51,11 +51,10 @@ inductive bool =
 let b = bool
 let b = true
 
-(* let n = *)
-  (* let b = true in *)
-  (* match b with *)
-  (* | true -> 1 *)
-  (* | false -> 0 *)
+let not b =
+  match b with
+  | true -> false
+  | false -> true
 
 (*
 Local Variables: 
