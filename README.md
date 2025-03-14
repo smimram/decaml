@@ -1,7 +1,7 @@
 DeCaml
 ======
 
-DeCaml is a an OCaml-like language with dependent types.
+DeCaml is a dependently typed language with OCaml-like syntax, which roughly means Agda dressed as OCaml:
 
 References
 ----------
