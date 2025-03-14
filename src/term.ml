@@ -13,7 +13,8 @@ type t =
   | InsertedMeta of meta * [`Bound | `Defined] list
   | Fix of t
   | Type (** the type of types *)
-  | Ind of string
+  | Ind of inductive
+  | Ind_cons of inductive * string
   | Ind_elim of inductive
 
   | Nat
@@ -24,12 +25,15 @@ and ty = t
 
 and meta = int
 
-and inductive =
+(** Inductive: name and identifier. *)
+and inductive = string * int
+  (*
   {
     name : string;
     ty : ty; (** type of the type constructor *)
     constructors : (string * ty) list;
   }
+     *)
 
 let rec to_string ?(pa=false) vars t =
   let pa s = if pa then "("^s^")" else s in
@@ -57,8 +61,9 @@ let rec to_string ?(pa=false) vars t =
   | Type -> "type"
   | Meta m -> "?" ^ string_of_int m
   | InsertedMeta (m,_) -> "?" ^ string_of_int m
-  | Ind ind -> ind
-  | Ind_elim ind -> ind.name ^ "_elim"
+  | Ind (ind,_) -> ind
+  | Ind_cons (_,cons) -> cons
+  | Ind_elim (ind,_) -> ind ^ "_elim"
   | Nat -> "nat"
   | Z -> "Z"
   | S -> "S"

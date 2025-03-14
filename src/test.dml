@@ -41,6 +41,9 @@ let rec length : {a} -> list a -> nat = fun (l : list a) -> l (fun _ n -> S n) Z
 
 let n = length list3
 
+let b = bool
+let b = true
+
 (*
 Local Variables: 
 mode: tuareg

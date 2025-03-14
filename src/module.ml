@@ -53,9 +53,11 @@ let eval_decl ctx d =
     (* TODO: add arguments to the type (below and in ty) *)
     let ty = V.Type in
     let rec inductive () : V.inductive =
-      let me = V.Ind (ind.Preterm.name, inductive) in
+      let id = V.fresh_ind () in
+      let me = V.Ind (ind.Preterm.name, id, inductive) in
       let ctx = Context.define ctx ind.name me ty in
       { Value.
+        id = id;
         name = ind.name;
         ty = ty;
         constructors =

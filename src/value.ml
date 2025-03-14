@@ -1,6 +1,8 @@
 open Common
 open Extlib
 
+[@@@ocaml.warning "-30"]
+
 type level = int
 [@@deriving show]
 
@@ -14,8 +16,9 @@ type t =
   | Pi of (string * icit * ty) * closure
   | Fix of t * spine
   | Type
-  | Ind of string * (unit -> inductive) (** type constructor of an inductive type *)
-  | Ind_elim of inductive
+  | Ind of string * int * (unit -> inductive) (** type constructor of an inductive type *)
+  | Ind_cons of inductive * string * spine (** a constructor of an inductive type *)
+  | Ind_elim of inductive * spine
 
   | Nat | Z | S of t option | Ind_nat of t list
 [@@deriving show]
@@ -37,6 +40,7 @@ and meta =
 
 and inductive =
   {
+    id : int; (** unique identifier *)
     name : string;
     ty : ty; (** type of the type constructor *)
     constructors : (string * ty) list;
@@ -84,6 +88,18 @@ let get_meta id =
   Dynarray.get metavariables id
 
 module IntMap = Map.Make(Int)
+
+let inductives = ref IntMap.empty
+
+let fresh_ind () =
+  IntMap.cardinal !inductives
+
+let register_ind (ind : inductive) =
+  assert (not (IntMap.mem ind.id !inductives));
+  inductives := IntMap.add ind.id ind !inductives
+
+let get_ind id =
+  IntMap.find id !inductives
 
 (** A partial renaming from Γ to Δ. *)
 type partial_renaming =
@@ -141,16 +157,11 @@ let rec eval (env:environment) (t:term) =
     let s = List.filter_map2 (fun t d -> if d = `Bound then Some (`Explicit, t) else None) env bds in
     app_spine t s
   | Type -> Type
-  | Ind _ind -> failwith "TODO: eval ind"
-  | Ind_elim ind ->
-    let ind =
-      {
-        name = ind.name;
-        ty = eval env ind.ty;
-        constructors = List.map (fun (c,a) -> c, eval env a) ind.constructors;
-      }
-    in
-    Ind_elim ind
+  | Ind _ -> failwith "TODO: eval ind"
+  | Ind_cons _ -> failwith "TODO: eval ind_cons"
+  | Ind_elim _ind -> failwith "TODO: eval ind_elim"
+    (* let ind : inductive = in *)
+    (* Ind_elim (ind, []) *)
   | Nat -> Nat
   | Z -> Z
   | S -> S None
@@ -208,16 +219,11 @@ let rec quote l (t:t) : term =
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type
-  | Ind (ind, _) -> Ind ind
-  | Ind_elim ind ->
-    let ind : Term.inductive =
-      {
-        name = ind.name;
-        ty = quote l ind.ty;
-        constructors = List.map (fun (c,a) -> c, quote l a) ind.constructors;
-      }
-    in
-    Ind_elim ind
+  | Ind (ind, id, _) -> Ind (ind, id)
+  | Ind_cons (ind,c,s) -> app_spine (Ind_cons ((ind.name,ind.id), c)) s
+  | Ind_elim (ind, s) ->
+    let ind : Term.inductive = ind.name, ind.id in
+    app_spine (Ind_elim ind) s
   | Nat -> Nat
   | Z -> Z
   | S None -> S
@@ -317,8 +323,10 @@ and unify_solve l m s t =
         Pi ((x,i,aux pren a), aux (lift pren) t)
       | Fix (_env, _t) -> failwith "TODO: rename fix"
       | Type -> Type
-      | Ind _ -> failwith "TODO"
-      | Ind_elim ind -> Ind_elim { name = ind.name; ty = aux pren ind.ty; constructors = List.map (fun (c,a) -> c, aux pren a) ind.constructors }
+      | Ind _ -> failwith "TODO: rename ind"
+      | Ind_cons _ -> failwith "TODO: rename ind_cons"
+      | Ind_elim _ -> failwith "TODO: rename ind_elim"
+        (* Ind_elim { name = ind.name; ty = aux pren ind.ty; constructors = List.map (fun (c,a) -> c, aux pren a) ind.constructors } *)
       | Nat -> Nat
       | Z -> Z
       | S None -> S
