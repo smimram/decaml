@@ -24,6 +24,11 @@ let app {a b} (f : a -> b) x = f x
 
 (* let app {a b} f (x : a) : b = f x *)
 
+let r0 {a} (x : a) = Z
+let rec r1 (a : type) (x : a) : nat = Z
+let rec r2 {a} (x : a) : nat = Z
+let rec r3 {a} (x : a) = Z
+
 let list : type -> type = fun a -> {l : type} -> (a -> l -> l) -> l -> l
 let nil : {a} -> list a = fun {l} cons nil -> nil
 let cons : {a} -> a -> list a -> list a = fun x xs cons nil -> cons x (xs cons nil)
@@ -35,19 +40,6 @@ let list3 : list nat = cons 0 (cons 1 (cons 2 nil))
 let rec length : {a} -> list a -> nat = fun (l : list a) -> l (fun _ n -> S n) Z
 
 let n = length list3
-
-(* let r0 {a} (x : a) = Z *)
-(* let rec r1 (a : type) (x : a) : nat = Z *)
-(* let rec r2 {a} (x : a) : nat = Z *)
-(* let rec r3 {a} (x : a) = Z *)
-
-(* (\** Scott natural numbers. *\) *)
-
-(* let nat {a b} : type = (s : a -> b) (z : b -> b) -> b -> b *)
-(* let zero {a b} : nat {a} {b} = fun s z -> z *)
-(* let succ {a b} (n : nat {a} {b}) : nat {a} {b} = fun s z -> s n *)
-(* let pred (n : nat) : nat = n id zero *)
-(* let rec add m n = fix  *)
 
 (*
 Local Variables: 

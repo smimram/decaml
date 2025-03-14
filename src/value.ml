@@ -150,7 +150,8 @@ and app (t:t) (i,u) =
   | Abs ((_,i'), (env,t)) -> assert (i = i'); eval (u::env) t
   | Var (x,s) -> Var (x, (i,u)::s)
   | Meta (m,s) -> Meta (m,(i,u)::s)
-  | Fix (t,s) when is_abs u -> app_spine (app t (`Explicit, fix t)) s
+  | Fix (t,s) when is_abs u ->
+    app (app_spine (app t (`Explicit, fix t)) s) (i,u)
   | Fix (t,s) -> Fix (t,(i,u)::s)
   | S None -> S (Some u)
   | _ -> failwith "TODO: unhandled app %s" @@ show t
