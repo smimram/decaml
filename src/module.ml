@@ -21,6 +21,7 @@ let def x t d = (Def (false, x, None, mk t))::d in
     (Ind {P.name; parameters; indices; constructors})::d
   in
   ind "unit" ["U", mk (Var "unit")] @@
+  ind "bool" ["true", mk (Var "bool"); "false", mk (Var "bool")] @@
   def "nat" Nat @@
   def "Z" Z @@
   def "S" S @@
