@@ -3,7 +3,7 @@
 (menhir (modules parser))
 
 (executable
- (name decaml)
+ (public_name decaml)
  (preprocess (pps ppx_deriving.show))
 )
 

@@ -3,7 +3,8 @@ open Preterm
 open Module
 %}
 
-%token LET REC IN EQ COLON HOLE FUN TO
+%token LET REC IN EQ COLON HOLE FUN TO INDUCTIVE BEGIN END
+%token MATCH WITH BAR
 %token LPAR RPAR LACC RACC
 %token TYPE
 %token<string> IDENT
@@ -23,6 +24,10 @@ decls:
 
 decl:
   | def { Def $1 }
+  | INDUCTIVE name=IDENT ty=opttype EQ constructors=list(constructor) { Ind { name; parameters=[]; ty = Option.value ~default:(mk ~pos:$loc(ty) Type) ty; constructors } }
+
+constructor:
+  | BAR c=IDENT COLON ty=mexpr { (c,ty) }
 
 def:
   | LET r=recursive f=IDENT args=args a=opttype EQ e=expr { (r, f, Option.map (pis ~pos:$loc args) a, abss ~pos:$loc args e) }
@@ -37,7 +42,7 @@ args:
 
 arg:
   | LPAR x=IDENT a=opttype RPAR { [x, `Explicit, a] }
-  | LACC xx=idents a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
+  | LACC xx=list(IDENT) a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
   | x=IDENT { [x, `Explicit, None] }
   | HOLE { ["_", `Explicit, None] }
 
@@ -51,9 +56,13 @@ piargs:
 
 piarg:
   | LPAR x=IDENT COLON a=expr RPAR { [(x, `Explicit, Some a)] }
-  | LACC xx=idents a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
+  | LACC xx=list(IDENT) a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
 
 expr:
+  | MATCH t=expr WITH cases=list(case) { mk ~pos:$loc (Match (t, cases)) }
+  | mexpr { $1 }
+
+mexpr:
   | a=aexpr TO b=expr { arr ~pos:$loc a b }
   | a=piargs TO b=expr { pis ~pos:$loc a b }
   | FUN x=args TO t=expr { abss ~pos:$loc x t }
@@ -73,9 +82,9 @@ sexpr:
   | TYPE { mk ~pos:$loc Type }
   | HOLE { mk ~pos:$loc Hole }
   | INT { nat ~pos:$loc $1 }
-  | LPAR RPAR {mk ~pos:$loc U }
+  | LPAR RPAR {mk ~pos:$loc (Var "uu") }
   | LPAR expr RPAR { $2 }
+  | BEGIN expr END { $2 }
 
-idents:
-  | IDENT idents { $1::$2 }
-  | IDENT { [$1] }
+case:
+  | BAR c=IDENT xx=list(IDENT) TO t=sexpr { (c, abss ~pos:$loc(t) (List.map (fun x -> x, `Explicit, None) xx) t) }

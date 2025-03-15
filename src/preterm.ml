@@ -24,11 +24,20 @@ and desc =
   | Fix of t
   | Hole
   | Cast of t * ty (** ensure that a term has given type *)
+  | Match of t * (string * t) list
 
-  | Unit | U
   | Nat | Z | S
 
 and ty = t
+
+(** An inductive type. *)
+and inductive =
+  {
+    name : string; (** name *)
+    parameters : (string * icit * ty) list;
+    ty : ty;
+    constructors : (string * ty) list; (** constructors with given name and types *)
+  }
 
 let mk ?pos desc =
   let pos = Option.value ~default:Pos.dummy pos in
@@ -93,8 +102,10 @@ let rec to_string ?(pa=false) e =
   | Fix t -> "fix " ^ to_string ~pa:true t
   | Cast (t,a) -> Printf.sprintf "(%s : %s)" (to_string t) (to_string a)
   | Type -> "type"
-  | Unit -> "unit"
-  | U -> "()"
+  | Match (t, l) ->
+    let l = List.map (fun (c,t) -> c ^ " -> " ^ to_string t) l in
+    let l = String.concat "\n" l in
+    Printf.sprintf "match %s with\n%s\n" (to_string t) l
   | Nat -> "nat"
   | Z -> "Z"
   | S -> "S"

@@ -25,6 +25,7 @@ module Context = struct
       level : int; (** level for creating fresh variables for abstractions *)
       types : (string * V.ty) list; (** the typing environment *)
       bds : [`Bound | `Defined] list; (** whether variables of the environment are defined or bound (this is used for metavariables which only depend on bound variables) *)
+      inductive : V.inductive list; (** declared inductive types *)
     }
 
   (** Empty context. *)
@@ -34,6 +35,7 @@ module Context = struct
       level = 0;
       types = [];
       bds = [];
+      inductive = [];
     }
 
   (** Variables defined in the context. *)
@@ -47,6 +49,7 @@ module Context = struct
       level = ctx.level + 1;
       types = (x,a)::ctx.types;
       bds = `Bound::ctx.bds;
+      inductive = ctx.inductive;
     }
 
   (** Insert a new binding. *)
@@ -59,10 +62,27 @@ module Context = struct
       level = ctx.level + 1;
       types = (x,a)::ctx.types;
       bds = `Defined::ctx.bds;
+      inductive = ctx.inductive;
     }
 
   (* close : (Γ : Con) → Val (Γ, x : A) B → Closure Γ A B *)
   let close ctx (t:value) : V.closure = ctx.environment, V.quote (ctx.level + 1) t
+
+  (** Declare an inductive type. *)
+  let inductive ctx (ind : V.inductive) =
+    V.register_ind ind;
+    let ctx = define ctx ind.name (Ind (ind.name, ind.id, fun () -> ind)) ind.ty in
+    let ctx =
+      List.fold_left
+        (fun ctx (c,a) ->
+           define ctx c (Ind_cons (ind,c,[])) a
+        ) ctx ind.constructors
+    in
+    { ctx with inductive = ind :: ctx.inductive }
+
+  (** Find the inductive type associated to a constructor. *)
+  let find_constructor ctx c =
+    List.find_opt (fun ind -> List.exists (fun (c',_) -> c' = c) ind.V.constructors) ctx.inductive
 end
 
 let fresh_meta (ctx:Context.t) =
@@ -190,8 +210,20 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let t = check ctx t a in
     t, a
   | Type -> Type, Type
-  | Unit -> Unit, Type
-  | U -> U, Unit
+
+  | Match (_t, l) ->
+    let _ind =
+      if l = [] then failwith "empty elimination not supported yet";
+      let c = fst @@ List.hd l in
+      match Context.find_constructor ctx c with
+      | Some ind -> ind
+      | None -> failwith "unknown constructor %s" c
+    in
+    (* let l = List.map (fun c -> List.assoc c l) (List.map fst ind.constructors) in *)
+    (* let l = List.map  *)
+    (* Term.apps_explicit (Ind_elim (ind.name, ind.id)) (l@[t]), eval ctx (Term.apps_explicit ind.ty l) *)
+    failwith "TODO: handle match"
+
   | Nat -> Nat, Type
   | Z -> Z, Nat
   | S -> S, V.arr Nat Nat

@@ -14,6 +14,12 @@ rule token = parse
   | "rec" { REC }
   | "in" { IN }
   | "fun" { FUN }
+  | "match" { MATCH }
+  | "with" { WITH }
+  | "inductive" { INDUCTIVE }
+  | "begin" { BEGIN }
+  | "end" { END }
+  | "|" { BAR }
   | ":" { COLON }
   | "=" { EQ }
   | "->" { TO }
