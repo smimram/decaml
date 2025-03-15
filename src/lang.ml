@@ -219,6 +219,9 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
       | Some ind -> ind
       | None -> failwith "unknown constructor %s" c
     in
+    (* let l = List.map (fun c -> List.assoc c l) (List.map fst ind.constructors) in *)
+    (* let l = List.map  *)
+    (* Term.apps_explicit (Ind_elim (ind.name, ind.id)) (l@[t]), eval ctx (Term.apps_explicit ind.ty l) *)
     failwith "TODO: handle match"
 
   | Nat -> Nat, Type

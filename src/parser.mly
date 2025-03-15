@@ -27,7 +27,7 @@ decl:
   | INDUCTIVE name=IDENT ty=opttype EQ constructors=list(constructor) { Ind { name; parameters=[]; ty = Option.value ~default:(mk ~pos:$loc(ty) Type) ty; constructors } }
 
 constructor:
-  | BAR c=IDENT COLON ty=expr { (c,ty) }
+  | BAR c=IDENT COLON ty=mexpr { (c,ty) }
 
 def:
   | LET r=recursive f=IDENT args=args a=opttype EQ e=expr { (r, f, Option.map (pis ~pos:$loc args) a, abss ~pos:$loc args e) }
@@ -59,12 +59,15 @@ piarg:
   | LACC xx=list(IDENT) a=opttype RACC { List.map (fun x -> x, `Implicit, a) xx }
 
 expr:
+  | MATCH t=expr WITH cases=list(case) { mk ~pos:$loc (Match (t, cases)) }
+  | mexpr { $1 }
+
+mexpr:
   | a=aexpr TO b=expr { arr ~pos:$loc a b }
   | a=piargs TO b=expr { pis ~pos:$loc a b }
   | FUN x=args TO t=expr { abss ~pos:$loc x t }
 /* | LPAR IDENT COLON expr RPAR { mk ~pos:$loc (Cast (mk ~pos:$loc($2) (Var $2), $4)) } */
   | def IN u=expr { let (r, f, a, t) = $1 in assert (r = false); mk ~pos:$loc (Let (f, a, t, u)) }
-  | MATCH t=expr WITH cases=list(case) { mk ~pos:$loc (Match (t, cases)) }
   | aexpr { $1 }
 
 // Application
@@ -84,4 +87,4 @@ sexpr:
   | BEGIN expr END { $2 }
 
 case:
-  | BAR c=IDENT xx=list(IDENT) TO t=expr { (c, abss ~pos:$loc(t) (List.map (fun x -> x, `Explicit, None) xx) t) }
+  | BAR c=IDENT xx=list(IDENT) TO t=sexpr { (c, abss ~pos:$loc(t) (List.map (fun x -> x, `Explicit, None) xx) t) }

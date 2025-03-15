@@ -80,3 +80,7 @@ let abss xx t =
 let rec rev_apps_explicit t = function
   | u::uu -> App (rev_apps_explicit t uu, (`Explicit, u))
   | [] -> t
+
+let rec apps_explicit t = function
+  | u::uu -> apps_explicit (App (t, (`Explicit, u))) uu
+  | [] -> t
