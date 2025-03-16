@@ -206,7 +206,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     t, a
   | Type -> Type, Type
 
-  | Match (_t, l) ->
+  | Match (t, l) ->
     let ind =
       if l = [] then failwith "empty elimination not supported yet";
       let c = fst @@ List.hd l in
@@ -215,6 +215,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
       | None -> failwith "unknown constructor %s" c
     in
     let l = List.map (fun c -> List.assoc c l) (List.map fst ind.constructors) in
+    let l = (P.mk ~pos P.Hole)::l@[t] in
     let l = List.map (fun t -> `Explicit, t) l in
     infer ctx (P.apps ~pos (P.mk ~pos (Ind_case (ind.name, ind.id))) l)
   | Ind_case (n,id) ->
