@@ -63,11 +63,11 @@ expr:
   | mexpr { $1 }
 
 mexpr:
-  | a=aexpr TO b=expr { arr ~pos:$loc a b }
-  | a=piargs TO b=expr { pis ~pos:$loc a b }
-  | FUN x=args TO t=expr { abss ~pos:$loc x t }
+  | a=aexpr TO b=mexpr { arr ~pos:$loc a b }
+  | a=piargs TO b=mexpr { pis ~pos:$loc a b }
+  | FUN x=args TO t=mexpr { abss ~pos:$loc x t }
 /* | LPAR IDENT COLON expr RPAR { mk ~pos:$loc (Cast (mk ~pos:$loc($2) (Var $2), $4)) } */
-  | def IN u=expr { let (r, f, a, t) = $1 in assert (r = false); mk ~pos:$loc (Let (f, a, t, u)) }
+  | def IN u=mexpr { let (r, f, a, t) = $1 in assert (r = false); mk ~pos:$loc (Let (f, a, t, u)) }
   | aexpr { $1 }
 
 // Application
