@@ -72,20 +72,15 @@ module Context = struct
   let inductive ctx (ind : V.inductive) =
     V.register_ind ind;
     let ctx = define ctx ind.name (Ind (ind.name, ind.id, fun () -> ind)) ind.ty in
-    let ctx =
-      List.fold_left
-        (fun ctx (c,a) ->
-           define ctx c (Ind_cons (ind,c,[])) a
-        ) ctx ind.constructors
-    in
+    let ctx = List.fold_left (fun ctx (c,a) -> define ctx c (Ind_cons (ind,c,[])) a) ctx ind.constructors in
     { ctx with inductive = ind :: ctx.inductive }
 
   (** Find the inductive type associated to a constructor. *)
   let find_constructor ctx c =
-    List.find_opt (fun ind -> List.exists (fun (c',_) -> c' = c) ind.V.constructors) ctx.inductive
+    List.find_opt (fun ind -> List.mem_assoc c ind.V.constructors) ctx.inductive
 end
 
-let fresh_meta (ctx:Context.t) =
+let fresh_meta (ctx:Context.t) : term =
   let m = Value.fresh_meta () in
   InsertedMeta (m.id, ctx.bds)
 
@@ -212,16 +207,16 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   | Type -> Type, Type
 
   | Match (_t, l) ->
-    let _ind =
+    let ind =
       if l = [] then failwith "empty elimination not supported yet";
       let c = fst @@ List.hd l in
       match Context.find_constructor ctx c with
       | Some ind -> ind
       | None -> failwith "unknown constructor %s" c
     in
-    (* let l = List.map (fun c -> List.assoc c l) (List.map fst ind.constructors) in *)
-    (* let l = List.map  *)
-    (* Term.apps_explicit (Ind_elim (ind.name, ind.id)) (l@[t]), eval ctx (Term.apps_explicit ind.ty l) *)
+    let _l = List.map (fun c -> List.assoc c l) (List.map fst ind.constructors) in
+    (* let l = List.map (fun t -> ) l in *)
+        (* Term.apps_explicit (Ind_elim (ind.name, ind.id)) (l@[t]), eval ctx (Term.apps_explicit ind.ty l) *)
     failwith "TODO: handle match"
 
   | Nat -> Nat, Type

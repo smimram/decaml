@@ -43,7 +43,7 @@ and inductive =
     id : int; (** unique identifier *)
     name : string;
     ty : ty; (** type of the type constructor *)
-    constructors : (string * ty) list;
+    constructors : (string * ty) list; (** the constructors along with their type *)
   }
 
 type value = t
