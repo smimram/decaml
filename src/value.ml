@@ -18,7 +18,7 @@ type t =
   | Type
   | Ind of string * int * (unit -> inductive) (** type constructor of an inductive type *)
   | Ind_cons of inductive * string * spine (** a constructor of an inductive type *)
-  | Ind_elim of inductive * spine
+  | Ind_case of inductive * spine (** elimination by case analysis *)
 
   | Nat | Z | S of t option | Ind_nat of t list
 [@@deriving show]
@@ -44,6 +44,7 @@ and inductive =
     name : string;
     ty : ty; (** type of the type constructor *)
     constructors : (string * ty) list; (** the constructors along with their type *)
+    case : ty; (** type of the eliminator *)
   }
 
 type value = t
@@ -159,7 +160,7 @@ let rec eval (env:environment) (t:term) =
   | Type -> Type
   | Ind _ -> failwith "TODO: eval ind"
   | Ind_cons _ -> failwith "TODO: eval ind_cons"
-  | Ind_elim _ind -> failwith "TODO: eval ind_elim"
+  | Ind_case _ind -> failwith "TODO: eval ind_case"
     (* let ind : inductive = in *)
     (* Ind_elim (ind, []) *)
   | Nat -> Nat
@@ -221,9 +222,9 @@ let rec quote l (t:t) : term =
   | Type -> Type
   | Ind (ind, id, _) -> Ind (ind, id)
   | Ind_cons (ind,c,s) -> app_spine (Ind_cons ((ind.name,ind.id), c)) s
-  | Ind_elim (ind, s) ->
+  | Ind_case (ind, s) ->
     let ind : Term.inductive = ind.name, ind.id in
-    app_spine (Ind_elim ind) s
+    app_spine (Ind_case ind) s
   | Nat -> Nat
   | Z -> Z
   | S None -> S
@@ -325,7 +326,7 @@ and unify_solve l m s t =
       | Type -> Type
       | Ind _ -> failwith "TODO: rename ind"
       | Ind_cons _ -> failwith "TODO: rename ind_cons"
-      | Ind_elim _ -> failwith "TODO: rename ind_elim"
+      | Ind_case _ -> failwith "TODO: rename ind_case"
         (* Ind_elim { name = ind.name; ty = aux pren ind.ty; constructors = List.map (fun (c,a) -> c, aux pren a) ind.constructors } *)
       | Nat -> Nat
       | Z -> Z

@@ -66,6 +66,7 @@ let eval_decl ctx d =
                (* Printf.printf "checked\n%!"; *)
                c, eval ctx a
             ) ind.constructors;
+        case = Type (** TODO... *)
       }
     in
     Context.inductive ctx (inductive ())

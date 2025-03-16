@@ -15,7 +15,7 @@ type t =
   | Type (** the type of types *)
   | Ind of inductive
   | Ind_cons of inductive * string
-  | Ind_elim of inductive
+  | Ind_case of inductive
 
   | Nat
   | Z | S | Ind_nat
@@ -63,7 +63,7 @@ let rec to_string ?(pa=false) vars t =
   | InsertedMeta (m,_) -> "?" ^ string_of_int m
   | Ind (ind,_) -> ind
   | Ind_cons (_,cons) -> cons
-  | Ind_elim (ind,_) -> ind ^ "_elim"
+  | Ind_case (ind,_) -> ind ^ "_case"
   | Nat -> "nat"
   | Z -> "Z"
   | S -> "S"

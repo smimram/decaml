@@ -25,6 +25,7 @@ and desc =
   | Hole
   | Cast of t * ty (** ensure that a term has given type *)
   | Match of t * (string * t) list
+  | Ind_case of string * int
 
   | Nat | Z | S
 
@@ -55,6 +56,10 @@ let abss ?pos a e =
     | x::l -> mk ~pos (Abs (x, aux l))
   in
   aux a
+
+let rec apps ?pos t = function
+  | u::l -> apps ?pos (mk ?pos (App (t,u))) l
+  | [] -> t
 
 (** Multiple pi types. *)
 let pis ?pos args a =
@@ -106,6 +111,7 @@ let rec to_string ?(pa=false) e =
     let l = List.map (fun (c,t) -> c ^ " -> " ^ to_string t) l in
     let l = String.concat "\n" l in
     Printf.sprintf "match %s with\n%s\n" (to_string t) l
+  | Ind_case (ind,_) -> ind ^ "_case"
   | Nat -> "nat"
   | Z -> "Z"
   | S -> "S"
