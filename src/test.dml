@@ -1,4 +1,4 @@
-let n = type
+(* let n = type | *)
 
 (* let u = () *)
 
@@ -51,10 +51,21 @@ inductive bool =
 let b = bool
 let b = true
 
-let not b =
-  match b with
-  | true -> false
-  | false -> true
+let not b = bool_case
+
+(* let not b = *)
+  (* match b with *)
+  (* | true -> false *)
+  (* | false -> true *)
+
+(*
+for bool the match has type
+(P : bool -> type) -> P false -> P true -> (b : bool) -> P b
+*)
+(*
+for vec a n the match has type
+(P : n -> vec a n -> type) -> P 0 [] -> P (suc n) x -> n -> (l : Vec a n) -> P l
+*)
 
 (*
 Local Variables: 

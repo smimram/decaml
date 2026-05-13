@@ -77,6 +77,15 @@ let abss xx t =
   in
   aux xx
 
+let pi ?(icit=`Explicit) x a b =
+  Pi ((x, icit, a), b)
+
+let arr a b =
+  pi "_" a b
+
+let app ?(icit=`Explicit) t u =
+  App (t, (icit, u))
+
 let rec rev_apps_explicit t = function
   | u::uu -> App (rev_apps_explicit t uu, (`Explicit, u))
   | [] -> t

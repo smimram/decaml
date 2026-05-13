@@ -16,7 +16,7 @@ type t =
   | Pi of (string * icit * ty) * closure
   | Fix of t * spine
   | Type
-  | Ind of string * int * (unit -> inductive) (** type constructor of an inductive type *)
+  | Ind of string * int * (unit -> inductive) (** type constructor of an inductive type with given name and identifier *)
   | Ind_cons of inductive * string * spine (** a constructor of an inductive type *)
   | Ind_case of inductive * spine (** elimination by case analysis *)
 
@@ -158,7 +158,7 @@ let rec eval (env:environment) (t:term) =
     let s = List.filter_map2 (fun t d -> if d = `Bound then Some (`Explicit, t) else None) env bds in
     app_spine t s
   | Type -> Type
-  | Ind _ -> failwith "TODO: eval ind"
+  | Ind (name,id) -> Ind (name, id, fun () -> get_ind id)
   | Ind_cons _ -> failwith "TODO: eval ind_cons"
   | Ind_case _ind -> failwith "TODO: eval ind_case"
     (* let ind : inductive = in *)

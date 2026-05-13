@@ -10,7 +10,7 @@ bug-reports: "https://github.com/smimram/decaml/issues"
 depends: [
   "dune" {>= "3.13"}
   "ocaml"
-  "menhir"
+  "menhir" {>= "20180523"}
   "odoc" {with-doc}
 ]
 build: [

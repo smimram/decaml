@@ -10,21 +10,8 @@ let () =
   let decls =
     try Parser.main Lexer.token lexbuf
     with
-    | Failure err ->
-      let pos = (Lexing.lexeme_end_p lexbuf) in
-      error
-        "Lexing error at line %d, character %d: %s"
-        pos.Lexing.pos_lnum
-        (pos.Lexing.pos_cnum - pos.Lexing.pos_bol)
-        err
-    | _ ->
-      (* | Parsing.Parse_error -> *)
-      let pos = (Lexing.lexeme_end_p lexbuf) in
-      error
-        "Parse error at word \"%s\", line %d, character %d."
-        (Lexing.lexeme lexbuf)
-        pos.Lexing.pos_lnum
-        (pos.Lexing.pos_cnum - pos.Lexing.pos_bol)
+    | Failure err -> error "Lexing error at %s: %s" (Pos.to_string @@ Pos.lexeme lexbuf) err
+    | Parser.Error -> error "Parse error at word \"%s\", %s." (Lexing.lexeme lexbuf) (Pos.to_string @@ Pos.lexeme lexbuf)
   in
   let decls = Module.prelude decls in
   close_in ic;

@@ -12,3 +12,7 @@
 ## Lean
 
 - [Lean system description](https://lean-lang.org/papers/system.pdf)
+
+## Other interesting systems
+
+- [Narya](https://github.com/mikeshulman/narya)
