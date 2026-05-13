@@ -41,3 +41,7 @@ and comment depth = parse
   | "(*" { comment (depth+1) lexbuf }
   | "*)" { if depth > 0 then comment (depth-1) lexbuf }
   | _    { comment depth lexbuf }
+
+(* Local Variables: *)
+(* mode: tuareg *)
+(* End: *)
