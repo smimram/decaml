@@ -1,7 +1,5 @@
 (* let n = type | *)
 
-(* let u = () *)
-
 let ten = 10
 
 let id_nat (x : nat) = x
@@ -43,6 +41,8 @@ let n = length list3
 
 inductive unit =
   | uu : unit
+
+let u = ()
 
 inductive bool =
   | true : bool
