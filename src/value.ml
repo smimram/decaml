@@ -38,10 +38,11 @@ and meta =
     mutable value : t option;
   }
 
+(** Inductive type declaration. *)
 and inductive =
   {
     id : int; (** unique identifier *)
-    name : string;
+    name : string; (** name *)
     ty : ty; (** type of the type constructor *)
     constructors : (string * ty) list; (** the constructors along with their type *)
     case : ty; (** type of the eliminator *)
@@ -92,7 +93,7 @@ module IntMap = Map.Make(Int)
 
 let inductives = ref IntMap.empty
 
-let fresh_ind () =
+let fresh_ind () : int =
   IntMap.cardinal !inductives
 
 let register_ind (ind : inductive) =
@@ -159,8 +160,10 @@ let rec eval (env:environment) (t:term) =
     app_spine t s
   | Type -> Type
   | Ind (name,id) -> Ind (name, id, fun () -> get_ind id)
-  | Ind_cons _ -> failwith "TODO: eval ind_cons"
-  | Ind_case _ind -> failwith "TODO: eval ind_case"
+  | Ind_cons ((_,id), cons) -> Ind_cons (get_ind id, cons, [])
+  | Ind_case (*(_,id)*) _ ->
+    (* let ind = get_ind id in *)
+    failwith "TODO: eval ind_case"
     (* let ind : inductive = in *)
     (* Ind_elim (ind, []) *)
   | Nat -> Nat
