@@ -31,7 +31,7 @@ let rec token buf =
   | first_char, Star ident_char -> IDENT (Sedlexing.Utf8.lexeme buf)
   | "(*" -> comment 0 buf; token buf
   | Plus (' ' | '\t' | '\r') -> token buf
-  | '\n' -> Sedlexing.new_line buf; token buf
+  | '\n' -> token buf
   | eof -> EOF
   | _ -> raise (Error (Printf.sprintf "Unexpected character: %s" (Sedlexing.Utf8.lexeme buf)))
 
@@ -39,6 +39,7 @@ and comment depth buf =
   match%sedlex buf with
   | "(*" -> comment (depth + 1) buf
   | "*)" -> if depth > 0 then comment (depth - 1) buf
-  | '\n' -> Sedlexing.new_line buf; comment depth buf
+  | '\n' -> comment depth buf
   | eof -> raise (Error "Unterminated comment")
-  | _ -> comment depth buf
+  | any -> comment depth buf
+  | _ -> assert false

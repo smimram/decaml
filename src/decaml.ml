@@ -3,6 +3,7 @@ open Extlib
 let error fmt = Printf.ksprintf (fun s -> print_endline s; exit 1) fmt
 
 let () =
+  print_endline "Welcome to decaml!";
   Printexc.record_backtrace true;
   let fname = Sys.argv.(1) in
   let ic = open_in fname in
