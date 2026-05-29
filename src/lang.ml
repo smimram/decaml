@@ -231,9 +231,10 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
   match t.desc, V.force a with
 
   | App (t,(i,({desc = Var x; _} as tx))), a ->
+    print_endline "app to var hack";
     let _, ax = infer ctx tx in
-    (* TODO: fix context *)
-    let b = Abs ((x, i), quote ctx a) in
+    (* TODO: fix context for x *)
+    let b = quote ctx a in
     let a = eval ctx @@ Pi ((x, i, quote ctx ax), b) in
     check ctx t a
   
@@ -284,6 +285,6 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     t
 
 and unify pos (ctx:Context.t) (a:ty) (b:ty) =
-  Common.debug "UNIFY" "%s VS %s" (to_string ctx a) (to_string ctx b);
+  Common.debug "UNIFY" "%s WITH %s" (to_string ctx a) (to_string ctx b);
   if not @@ V.unify ctx.Context.level a b then
     type_error pos "expression has type %s but type %s was expected" (to_string ctx a) (to_string ctx b)

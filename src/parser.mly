@@ -82,7 +82,7 @@ sexpr:
   | TYPE { mk ~pos:$loc Type }
   | HOLE { mk ~pos:$loc Hole }
   | INT { nat ~pos:$loc $1 }
-  | LPAR RPAR {mk ~pos:$loc (Var "uu") }
+  | LPAR RPAR {mk ~pos:$loc (Var "tt") }
   | LPAR expr RPAR { $2 }
   | BEGIN expr END { $2 }
 

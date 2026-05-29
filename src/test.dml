@@ -27,8 +27,9 @@ let rec r1 (a : type) (x : a) : nat = Z
 let rec r2 {a} (x : a) : nat = Z
 let rec r3 {a} (x : a) = Z
 
+(*
 let list : type -> type = fun a -> {l : type} -> (a -> l -> l) -> l -> l
-let nil : {a} -> list a = fun {l} cons nil -> nil
+let nil : {a} -> list a = fun {a} a {l} cons nil -> nil
 let cons : {a} -> a -> list a -> list a = fun x xs cons nil -> cons x (xs cons nil)
 let map : {a b} -> (a -> b) -> list a -> list b = fun {a} {b} f xs c n -> xs (fun a -> c (f a)) n
 let list0 : list nat = nil
@@ -38,11 +39,6 @@ let list3 : list nat = cons 0 (cons 1 (cons 2 nil))
 let rec length : {a} -> list a -> nat = fun (l : list a) -> l (fun _ n -> S n) Z
 
 let n = length list3
-
-inductive unit =
-  | uu : unit
-
-let u = ()
 
 inductive bool =
   | true : bool
@@ -57,7 +53,14 @@ let not (b : bool) : bool =
   match b with
   | true -> false
   | false -> true
+*)
 
+inductive unit =
+  | tt : unit
+
+let u = ()
+
+   
 (*
 for bool the match has type
 (P : bool -> type) -> P false -> P true -> (b : bool) -> P b
