@@ -53,8 +53,8 @@ let eval_decl ctx d =
     (* TODO: add arguments parameters to the type *)
     let ty = eval ctx @@ check ctx ind.ty Type in
     let ind : V.inductive =
-      let id = V.fresh_ind () in
-      let me = V.Ind (ind.Preterm.name, id) in
+      let id = V.Inductive.fresh () in
+      let me = V.Ind id in
       (*
       (* TODO: declare variables in the context *)
       let case = T.pi "a" (T.arr (quote ctx me) T.Type) (T.pi "x" (quote ctx me) (T.app (Var "a") (Var "x"))) in

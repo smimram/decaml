@@ -70,8 +70,8 @@ module Context = struct
 
   (** Declare an inductive type. *)
   let inductive ctx (ind : V.inductive) =
-    V.register_ind ind;
-    let ctx = define ctx ind.name (Ind (ind.name, ind.id)) ind.ty in
+    V.Inductive.register ind;
+    let ctx = define ctx ind.name (Ind ind.id) ind.ty in
     let ctx = List.fold_left (fun ctx (c,a) -> define ctx c (Ind_cons (c,[])) a) ctx ind.constructors in
     { ctx with inductive = ind :: ctx.inductive }
 
@@ -248,6 +248,18 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     let b = V.eval ((V.var ctx.level)::env) b in
     let t = check (Context.new_binder ctx x a) t b in
     Abs ((x,`Implicit),t)
+
+  (* | Match ({desc = Var x} as xt, cases), a -> *)
+    (* let ind = *)
+      (* let cons = List.map (fun (c,_,_) -> c) cases in *)
+      (* V.Ig *)
+    (* in *)
+    (* let cases = *)
+      (* List.map *)
+        (* (fun (c, xx, t) -> *)
+        (* ) *)
+    (* in *)
+    (* Match (xt, cases) *)
 
   | Let (x,a,t,u), a' ->
     let a =

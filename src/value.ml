@@ -16,7 +16,7 @@ type t =
   | Pi of (string * icit * ty) * closure
   | Fix of t * spine
   | Type
-  | Ind of string * inductive_id (** type constructor of an inductive type with given name and identifier *)
+  | Ind of inductive_id (** type constructor of an inductive type with given identifier *)
   | Ind_cons of string * spine (** a constructor of an inductive type *)
   | Ind_case of inductive * spine (** elimination by case analysis *)
 
@@ -107,19 +107,27 @@ module Meta = struct
     m.value <- Some t
 end
 
+module Inductive = struct
+  module IntMap = Map.Make(Int)
+
+  type t = inductive
+
+  let name (ind:t) = ind.name
+
+  let inductives = ref IntMap.empty
+
+  let fresh () : int = IntMap.cardinal !inductives
+
+  let register (ind : inductive) =
+    assert (not (IntMap.mem ind.id !inductives));
+    inductives := IntMap.add ind.id ind !inductives
+
+  let get id = IntMap.find id !inductives
+
+  let name_of_id id = name @@ get id
+end
+
 module IntMap = Map.Make(Int)
-
-let inductives = ref IntMap.empty
-
-let fresh_ind () : int =
-  IntMap.cardinal !inductives
-
-let register_ind (ind : inductive) =
-  assert (not (IntMap.mem ind.id !inductives));
-  inductives := IntMap.add ind.id ind !inductives
-
-let get_ind id =
-  IntMap.find id !inductives
 
 (** A partial renaming from Γ to Δ. *)
 type partial_renaming =
@@ -177,7 +185,7 @@ let rec eval (env:environment) (t:term) =
     let s = List.filter_map2 (fun t d -> if d = `Bound then Some (`Explicit, t) else None) env bds in
     app_spine t s
   | Type -> Type
-  | Ind (name, id) -> Ind (name, id)
+  | Ind (_,id) -> Ind id
   | Ind_cons cons -> Ind_cons (cons, [])
   | Ind_case (*(_,id)*) _ ->
     (* let ind = get_ind id in *)
@@ -241,7 +249,7 @@ let rec quote l (t:t) : term =
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type
-  | Ind (ind, id) -> Ind (ind, id)
+  | Ind id -> Ind (Inductive.name_of_id id, id)
   | Ind_cons (c,s) -> app_spine (Ind_cons c) s
   | Ind_case (ind, s) ->
     let ind : Term.inductive = ind.name, ind.id in
