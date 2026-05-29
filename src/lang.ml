@@ -225,7 +225,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
   | S -> S, V.arr Nat Nat
 
 and check (ctx:Context.t) (t:preterm) (a:ty) : term =
-  (* Printf.printf "*** check %s : %s\n%!" (P.to_string t) (to_string ctx a); *)
+  Common.debug "CHECK" "%s : %s" (P.to_string t) (to_string ctx a);
   let pos = t.pos in
   match t.desc, V.force a with
 
@@ -272,6 +272,6 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     t
 
 and unify pos (ctx:Context.t) (a:ty) (b:ty) =
-  (* Printf.printf "*** unify %s with %s\n%!" (to_string ctx a) (to_string ctx b); *)
+  Common.debug "UNIFY" "%s VS %s" (to_string ctx a) (to_string ctx b);
   if not @@ V.unify ctx.Context.level a b then
     type_error pos "expression has type %s but type %s was expected" (to_string ctx a) (to_string ctx b)

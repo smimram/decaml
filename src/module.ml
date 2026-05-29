@@ -27,8 +27,10 @@ let def x t d = (Def (false, x, None, mk t))::d in
 
 let eval_decl ctx d =
   let open Lang in
+  print_newline ();
   match d with
   | Def (r,x,a,t) ->
+    Common.info "DEF  " "%s%s = %s" x (match a with Some a -> " : " ^ P.to_string a | None -> "") (P.to_string t);
     let t = if r then mk (Fix (mk (Abs ((x,`Explicit,a),t)))) else t in
     (* Printf.printf "%s = %s\n%!" x (Preterm.to_string t); *)
     let t, a =
@@ -40,14 +42,14 @@ let eval_decl ctx d =
       | None ->
         infer ctx t
     in
-    Printf.printf "%s : %s\n%!" x (to_string ctx a);
-    Printf.printf "%s = %s\n%!" x (T.to_string (Context.variables ctx) t);
-    Printf.printf "%s = %s\n%!" x (T.to_string (Context.variables ctx) (normalize ctx t));
+    (* Printf.printf "%s : %s\n%!" x (to_string ctx a); *)
+    (* Printf.printf "%s = %s\n%!" x (T.to_string (Context.variables ctx) t); *)
+    (* Printf.printf "%s = %s\n%!" x (T.to_string (Context.variables ctx) (normalize ctx t)); *)
     print_newline ();
     (* Context.bind ctx x a *)
     Context.define ctx x (V.eval ctx.environment t) a
   | Ind ind ->
-    Printf.printf "inductive %s : %s\n\n%!" ind.Preterm.name (String.concat " | " @@ List.map fst ind.constructors);
+    Common.info "IND  " "%s : %s" ind.Preterm.name (String.concat " | " @@ List.map fst ind.constructors);
     (* TODO: add arguments parameters to the type *)
     let ty = eval ctx @@ check ctx ind.ty Type in
     let ind : V.inductive =
