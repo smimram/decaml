@@ -72,7 +72,7 @@ module Context = struct
   let inductive ctx (ind : V.inductive) =
     V.register_ind ind;
     let ctx = define ctx ind.name (Ind (ind.name, ind.id)) ind.ty in
-    let ctx = List.fold_left (fun ctx (c,a) -> define ctx c (Ind_cons (ind,c,[])) a) ctx ind.constructors in
+    let ctx = List.fold_left (fun ctx (c,a) -> define ctx c (Ind_cons (c,[])) a) ctx ind.constructors in
     { ctx with inductive = ind :: ctx.inductive }
 
   (** Find the inductive type associated to a constructor. *)

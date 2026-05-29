@@ -17,7 +17,7 @@ type t =
   | Fix of t * spine
   | Type
   | Ind of string * inductive_id (** type constructor of an inductive type with given name and identifier *)
-  | Ind_cons of inductive * string * spine (** a constructor of an inductive type *)
+  | Ind_cons of string * spine (** a constructor of an inductive type *)
   | Ind_case of inductive * spine (** elimination by case analysis *)
 
   | Nat | Z | S of t option | Ind_nat of t list
@@ -178,7 +178,7 @@ let rec eval (env:environment) (t:term) =
     app_spine t s
   | Type -> Type
   | Ind (name, id) -> Ind (name, id)
-  | Ind_cons ((_,id), cons) -> Ind_cons (get_ind id, cons, [])
+  | Ind_cons cons -> Ind_cons (cons, [])
   | Ind_case (*(_,id)*) _ ->
     (* let ind = get_ind id in *)
     failwith "TODO: eval ind_case"
@@ -242,7 +242,7 @@ let rec quote l (t:t) : term =
     app_spine (Meta m.id) s
   | Type -> Type
   | Ind (ind, id) -> Ind (ind, id)
-  | Ind_cons (ind,c,s) -> app_spine (Ind_cons ((ind.name,ind.id), c)) s
+  | Ind_cons (c,s) -> app_spine (Ind_cons c) s
   | Ind_case (ind, s) ->
     let ind : Term.inductive = ind.name, ind.id in
     app_spine (Ind_case ind) s
@@ -267,7 +267,9 @@ exception Unification
 (** Unify two values. *)
 let rec unify l (t:t) (u:t) =
   Common.debug "UNIFY" "%s VS %s" (show t) (show u);
-  match force t, force u with
+  let t = force t in
+  let u = force u in
+  match t, u with
   | Abs ((_,i),(env,b)), Abs ((_,i'),(env',b')) ->
     unify_check (i = i');
     let b = eval ((var l)::env) b in
@@ -292,7 +294,8 @@ let rec unify l (t:t) (u:t) =
       | Some t, Some t' -> unify l t t'
       | _ -> raise Unification
     )
-  | Ind (_,n), Ind (_,n') when n = n' -> ()
+  | Ind _, Ind _ when t = u -> ()
+  (* | Ind_cons ( *)
   | Meta (m,s), Meta (m',s') when m.id = m'.id -> unify_spines l s s'
   | Meta (m,s), t -> unify_solve l m s t
   | t, Meta (m,s) -> unify_solve l m s t
