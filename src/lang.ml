@@ -250,17 +250,9 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     let t = check (Context.new_binder ctx x a) t b in
     Abs ((x,`Implicit),t)
 
-  (* | Match ({desc = Var x} as xt, cases), a -> *)
-    (* let ind = *)
-      (* let cons = List.map (fun (c,_,_) -> c) cases in *)
-      (* V.Ig *)
-    (* in *)
-    (* let cases = *)
-      (* List.map *)
-        (* (fun (c, xx, t) -> *)
-        (* ) *)
-    (* in *)
-    (* Match (xt, cases) *)
+  | Match ({desc = Var _; _} as x, cases), a ->
+    let t = P.apps ~pos (P.mk ~pos (Fun cases)) [`Explicit,x] in
+    check ctx t a
 
   | Let (x,a,t,u), a' ->
     let a =
