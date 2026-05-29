@@ -84,17 +84,28 @@ let rec to_string_simple ?(pa=false) t =
   | S (Some t) -> pa ("S " ^ to_string_simple ~pa:true t)
 *)
 
-let metavariables = Dynarray.create ()
+module Meta = struct
+  type t = meta
 
-(** Generate a fresh metavariable. *)
-let fresh_meta () =
-  let m = { id = Dynarray.length metavariables; value = None } in
-  Dynarray.add_last metavariables m;
-  m
+  let to_string (m:t) = "?" ^ string_of_int m.id
 
-(** Get metavariable with given id. *)
-let get_meta id =
-  Dynarray.get metavariables id
+  let metavariables = Dynarray.create ()
+
+  (** Generate a fresh metavariable. *)
+  let fresh () =
+    let m = { id = Dynarray.length metavariables; value = None } in
+    Dynarray.add_last metavariables m;
+    m
+
+  (** Get metavariable with given id. *)
+  let get id =
+    Dynarray.get metavariables id
+
+  let set m t =
+    Common.debug "META " "%s <- %s" (to_string m) (show t);
+    assert (m.value = None);
+    m.value <- Some t
+end
 
 module IntMap = Map.Make(Int)
 
@@ -154,9 +165,9 @@ let rec eval (env:environment) (t:term) =
     let a = eval env a in
     Pi ((x,i,a),(env,b))
   | Fix t -> Fix (eval env t,[])
-  | Meta m -> Meta (get_meta m, [])
+  | Meta m -> Meta (Meta.get m, [])
   | InsertedMeta (m, bds) ->
-    let m = get_meta m in
+    let m = Meta.get m in
     let t =
       match m.value with
       | Some t -> t
@@ -243,11 +254,13 @@ let rec quote l (t:t) : term =
 
 let to_string vars t = Term.to_string vars @@ quote (List.length vars) t
 
+(*
 let string_of_meta vars m =
-  let m = get_meta m in
+  let m = Meta.get m in
   match m.value with
   | Some t -> to_string vars t
   | None -> "?" ^ string_of_int m.id
+*)
 
 exception Unification
 

@@ -81,7 +81,7 @@ module Context = struct
 end
 
 let fresh_meta (ctx:Context.t) : term =
-  let m = Value.fresh_meta () in
+  let m = V.Meta.fresh () in
   InsertedMeta (m.id, ctx.bds)
 
 let eval ctx (t : term) : value = V.eval ctx.Context.environment t
