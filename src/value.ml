@@ -292,6 +292,7 @@ let rec unify l (t:t) (u:t) =
       | Some t, Some t' -> unify l t t'
       | _ -> raise Unification
     )
+  | Ind (_,n), Ind (_,n') when n = n' -> ()
   | Meta (m,s), Meta (m',s') when m.id = m'.id -> unify_spines l s s'
   | Meta (m,s), t -> unify_solve l m s t
   | t, Meta (m,s) -> unify_solve l m s t
@@ -305,7 +306,7 @@ and unify_spines l s s' =
 
 (** Given a context Γ (in l), make sure that a meta-variable ?α (in m) applied to the spine s equals to a term t. *)
 and unify_solve l m s t =
-  (* Printf.printf "***solve ?%d\n" m.id; *)
+  Common.debug "SOLVE" "%s ... = %s" (Meta.to_string m) (show t);
   (* From Γ and the spine, we construct a partial renaming from Γ to Δ (ie a partial function from the variables of Δ to those of Γ). *)
   let pren =
     let rec aux = function
@@ -351,7 +352,6 @@ and unify_solve l m s t =
       | Ind _ -> failwith "TODO: rename ind"
       | Ind_cons _ -> failwith "TODO: rename ind_cons"
       | Ind_case _ -> failwith "TODO: rename ind_case"
-        (* Ind_elim { name = ind.name; ty = aux pren ind.ty; constructors = List.map (fun (c,a) -> c, aux pren a) ind.constructors } *)
       | Nat -> Nat
       | Z -> Z
       | S None -> S
