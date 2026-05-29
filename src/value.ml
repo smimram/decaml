@@ -16,7 +16,7 @@ type t =
   | Pi of (string * icit * ty) * closure
   | Fix of t * spine
   | Type
-  | Ind of string * int * (unit -> inductive) (** type constructor of an inductive type with given name and identifier *)
+  | Ind of string * inductive_id (** type constructor of an inductive type with given name and identifier *)
   | Ind_cons of inductive * string * spine (** a constructor of an inductive type *)
   | Ind_case of inductive * spine (** elimination by case analysis *)
 
@@ -38,14 +38,21 @@ and meta =
     mutable value : t option;
   }
 
+and inductive_id = int
+
 (** Inductive type declaration. *)
+(*
+For instance, for vectors
+- ty is N -> Type
+- nil is Vec 0
+- cons is (n : N) -> Vec n -> Vec (n + 1)
+*)
 and inductive =
   {
-    id : int; (** unique identifier *)
+    id : inductive_id; (** unique identifier *)
     name : string; (** name *)
     ty : ty; (** type of the type constructor *)
     constructors : (string * ty) list; (** the constructors along with their type *)
-    case : ty; (** type of the eliminator *)
   }
 
 type value = t
@@ -159,7 +166,7 @@ let rec eval (env:environment) (t:term) =
     let s = List.filter_map2 (fun t d -> if d = `Bound then Some (`Explicit, t) else None) env bds in
     app_spine t s
   | Type -> Type
-  | Ind (name,id) -> Ind (name, id, fun () -> get_ind id)
+  | Ind (name, id) -> Ind (name, id)
   | Ind_cons ((_,id), cons) -> Ind_cons (get_ind id, cons, [])
   | Ind_case (*(_,id)*) _ ->
     (* let ind = get_ind id in *)
@@ -223,7 +230,7 @@ let rec quote l (t:t) : term =
   | Meta (m, s) ->
     app_spine (Meta m.id) s
   | Type -> Type
-  | Ind (ind, id, _) -> Ind (ind, id)
+  | Ind (ind, id) -> Ind (ind, id)
   | Ind_cons (ind,c,s) -> app_spine (Ind_cons ((ind.name,ind.id), c)) s
   | Ind_case (ind, s) ->
     let ind : Term.inductive = ind.name, ind.id in
@@ -285,7 +292,7 @@ and unify_spines l s s' =
 (** Given a context Γ (in l), make sure that a meta-variable ?α (in m) applied to the spine s equals to a term t. *)
 and unify_solve l m s t =
   (* Printf.printf "***solve ?%d\n" m.id; *)
-  (* From Γ and the spine, we construct a partial renaming from Γ to Δ (ie a partial function from the variables of Δ to those of Γ *)
+  (* From Γ and the spine, we construct a partial renaming from Γ to Δ (ie a partial function from the variables of Δ to those of Γ). *)
   let pren =
     let rec aux = function
       | (_,t)::s ->

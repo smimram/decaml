@@ -27,13 +27,6 @@ and meta = int
 
 (** Inductive: name and identifier. *)
 and inductive = string * int
-  (*
-  {
-    name : string;
-    ty : ty; (** type of the type constructor *)
-    constructors : (string * ty) list;
-  }
-     *)
 
 let rec to_string ?(pa=false) vars t =
   let pa s = if pa then "("^s^")" else s in

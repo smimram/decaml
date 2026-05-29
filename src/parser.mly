@@ -87,4 +87,4 @@ sexpr:
   | BEGIN expr END { $2 }
 
 case:
-  | BAR c=IDENT xx=list(IDENT) TO t=sexpr { (c, abss ~pos:$loc(t) (List.map (fun x -> x, `Explicit, None) xx) t) }
+  | BAR c=IDENT xx=list(IDENT) TO t=sexpr { (c, xx, t) }

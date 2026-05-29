@@ -50,15 +50,14 @@ let eval_decl ctx d =
     Printf.printf "inductive %s : %s\n\n%!" ind.Preterm.name (String.concat " | " @@ List.map fst ind.constructors);
     (* TODO: add arguments parameters to the type *)
     let ty = eval ctx @@ check ctx ind.ty Type in
-    let rec inductive () : V.inductive =
+    let ind : V.inductive =
       let id = V.fresh_ind () in
-      let me = V.Ind (ind.Preterm.name, id, inductive) in
+      let me = V.Ind (ind.Preterm.name, id) in
       (*
       (* TODO: declare variables in the context *)
       let case = T.pi "a" (T.arr (quote ctx me) T.Type) (T.pi "x" (quote ctx me) (T.app (Var "a") (Var "x"))) in
       let case = eval ctx case in
          *)
-      let case = V.Type in (* TODO..... *)
       let ctx = Context.define ctx ind.name me ty in
       { Value.
         id = id;
@@ -72,9 +71,8 @@ let eval_decl ctx d =
                (* Printf.printf "checked\n%!"; *)
                c, eval ctx a
             ) ind.constructors;
-        case;
       }
     in
-    Context.inductive ctx (inductive ())
+    Context.inductive ctx ind
 
 let eval ctx (m : t) = List.fold_left eval_decl ctx m

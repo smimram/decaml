@@ -71,9 +71,8 @@ module Context = struct
   (** Declare an inductive type. *)
   let inductive ctx (ind : V.inductive) =
     V.register_ind ind;
-    let ctx = define ctx ind.name (Ind (ind.name, ind.id, fun () -> ind)) ind.ty in
+    let ctx = define ctx ind.name (Ind (ind.name, ind.id)) ind.ty in
     let ctx = List.fold_left (fun ctx (c,a) -> define ctx c (Ind_cons (ind,c,[])) a) ctx ind.constructors in
-    let ctx = define ctx (ind.name ^ "_case") (Ind_case (ind, [])) ind.case in
     { ctx with inductive = ind :: ctx.inductive }
 
   (** Find the inductive type associated to a constructor. *)
@@ -206,7 +205,8 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let t = check ctx t a in
     t, a
   | Type -> Type, Type
-
+  | Match _ -> failwith "TODO: add (some) type inference for match"
+            (*
   | Match (t, l) ->
     let ind =
       if l = [] then failwith "empty elimination not supported yet";
@@ -219,10 +219,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let l = (P.mk ~pos P.Hole)::l@[t] in
     let l = List.map (fun t -> `Explicit, t) l in
     infer ctx (P.apps ~pos (P.mk ~pos (Ind_case (ind.name, ind.id))) l)
-  | Ind_case (n,id) ->
-    let ind = V.get_ind id in
-    Ind_case (n,id), ind.case
-
+               *)
   | Nat -> Nat, Type
   | Z -> Z, Nat
   | S -> S, V.arr Nat Nat

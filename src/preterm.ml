@@ -24,8 +24,7 @@ and desc =
   | Fix of t
   | Hole
   | Cast of t * ty (** ensure that a term has given type *)
-  | Match of t * (string * t) list
-  | Ind_case of string * int
+  | Match of t * (string * string list * t) list
 
   | Nat | Z | S
 
@@ -108,10 +107,9 @@ let rec to_string ?(pa=false) e =
   | Cast (t,a) -> Printf.sprintf "(%s : %s)" (to_string t) (to_string a)
   | Type -> "type"
   | Match (t, l) ->
-    let l = List.map (fun (c,t) -> c ^ " -> " ^ to_string t) l in
+    let l = List.map (fun (c,xx,t) -> Printf.sprintf "%s%s -> %s" c (String.concat "" @@ List.map (fun x -> " " ^ x) xx) (to_string t)) l in
     let l = String.concat "\n" l in
     Printf.sprintf "match %s with\n%s\n" (to_string t) l
-  | Ind_case (ind,_) -> ind ^ "_case"
   | Nat -> "nat"
   | Z -> "Z"
   | S -> "S"

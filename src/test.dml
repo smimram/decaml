@@ -51,7 +51,7 @@ inductive bool =
 let b = bool
 let b = true
 
-let not b = bool_case
+(* let not b = bool_case *)
 
 (* let not b = *)
   (* match b with *)
