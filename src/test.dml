@@ -53,10 +53,10 @@ let b = true
 
 (* let not b = bool_case *)
 
-(* let not b = *)
-  (* match b with *)
-  (* | true -> false *)
-  (* | false -> true *)
+let not b =
+  match b with
+  | true -> false
+  | false -> true
 
 (*
 for bool the match has type

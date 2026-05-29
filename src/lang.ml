@@ -104,7 +104,7 @@ let rec insert ctx (t:term) (a:ty) =
   | _ -> t, a
 
 let rec infer (ctx:Context.t) (t:preterm) : term * ty =
-  (* Printf.printf "*** infer %s\n%!" (P.to_string t); *)
+  Common.debug "INFER" "%s" (P.to_string t);
   let pos = t.pos in
   match t.desc with
   | Let (x,a,t,u) ->
