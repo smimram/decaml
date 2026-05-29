@@ -53,7 +53,7 @@ let b = true
 
 (* let not b = bool_case *)
 
-let not b =
+let not (b : bool) : bool =
   match b with
   | true -> false
   | false -> true

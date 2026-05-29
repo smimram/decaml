@@ -30,12 +30,12 @@ and environment = t list
 (** A list of arguments. Important note this is reversed compared to the natural order: the first element of the list is the outermost argument! *)
 and spine = (icit * t) list
 
-and closure = environment * term
+and closure = (environment * term) [@opaque]
 
 and meta =
   {
     id : int;
-    mutable value : t option;
+    mutable value : t option [@opaque];
   }
 
 and inductive_id = int
@@ -253,6 +253,7 @@ exception Unification
 
 (** Unify two values. *)
 let rec unify l (t:t) (u:t) =
+  Common.debug "UNIFY" "%s VS %s" (show t) (show u);
   match force t, force u with
   | Abs ((_,i),(env,b)), Abs ((_,i'),(env',b')) ->
     unify_check (i = i');

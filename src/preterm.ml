@@ -84,7 +84,7 @@ let rec to_string ?(pa=false) e =
   match e.desc with
   | Let (x,a,t,u) ->
     let a = match a with Some a -> " : " ^ to_string a | None -> "" in
-    Printf.sprintf "let %s%s = %s in\n%s" x a (to_string t) (to_string u)
+    Printf.sprintf "let %s%s = %s in %s" x a (to_string t) (to_string u)
   | Abs ((x,i,a),t) ->
     let arg =
       let a = match a with Some a -> " : " ^ to_string a | None -> "" in
