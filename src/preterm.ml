@@ -25,6 +25,7 @@ and desc =
   | Hole
   | Cast of t * ty (** ensure that a term has given type *)
   | Match of t * (string * string list * t) list
+  | Fun of (string * string list * t) list (** function defined by case analysis *)
 
   | Nat | Z | S
 
@@ -110,6 +111,10 @@ let rec to_string ?(pa=false) e =
     let l = List.map (fun (c,xx,t) -> Printf.sprintf "%s%s -> %s" c (String.concat "" @@ List.map (fun x -> " " ^ x) xx) (to_string t)) l in
     let l = String.concat " | " l in
     Printf.sprintf "match %s with %s" (to_string t) l
+  | Fun l ->
+    let l = List.map (fun (c,xx,t) -> Printf.sprintf "%s%s -> %s" c (String.concat "" @@ List.map (fun x -> " " ^ x) xx) (to_string t)) l in
+    let l = String.concat " | " l in
+    Printf.sprintf "function %s" l
   | Nat -> "nat"
   | Z -> "Z"
   | S -> "S"

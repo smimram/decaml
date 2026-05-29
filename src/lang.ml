@@ -205,6 +205,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let t = check ctx t a in
     t, a
   | Type -> Type, Type
+  | Fun _ -> failwith "TODO: infer for fun"
   | Match _ -> failwith "TODO: add (some) type inference for match"
             (*
   | Match (t, l) ->
