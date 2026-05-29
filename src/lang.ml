@@ -230,6 +230,13 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
   let pos = t.pos in
   match t.desc, V.force a with
 
+  | App (t,(i,({desc = Var x; _} as tx))), a ->
+    let _, ax = infer ctx tx in
+    (* TODO: fix context *)
+    let b = Abs ((x, i), quote ctx a) in
+    let a = eval ctx @@ Pi ((x, i, quote ctx ax), b) in
+    check ctx t a
+  
   | Abs ((x,i,a),t), Pi ((_x',i',a'),(env,b)) when i = i' ->
     if a <> None then
       (

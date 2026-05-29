@@ -376,8 +376,7 @@ and unify_solve l m s t =
   in
   let t = rename m pren t in
   let solution = eval [] @@ Term.abss (List.mapi (fun n i -> "x" ^ string_of_int (n+1), i) @@ List.rev @@ List.map fst s) t in
-  Printf.printf "metavariable ?%d gets %s\n%!" m.id (to_string [] solution);
-  m.value <- Some solution
+  Meta.set m solution
 
 let unify l t u =
   try unify l t u; true
