@@ -1,10 +1,9 @@
-(ocamllex (modules lexer))
-
 (menhir (modules parser))
 
 (executable
  (public_name decaml)
- (preprocess (pps ppx_deriving.show))
+ (libraries sedlex menhirLib)
+ (preprocess (pps ppx_deriving.show sedlex.ppx))
 )
 
 (rule

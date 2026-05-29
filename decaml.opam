@@ -11,6 +11,7 @@ depends: [
   "dune" {>= "3.13"}
   "ocaml"
   "menhir" {>= "20180523"}
+  "sedlex"
   "odoc" {with-doc}
 ]
 build: [

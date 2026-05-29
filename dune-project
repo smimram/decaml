@@ -15,5 +15,6 @@
  (depends
   ocaml
   menhir
+  sedlex
  )
 )
