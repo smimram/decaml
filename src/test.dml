@@ -40,6 +40,13 @@ let rec length : {a} -> list a -> nat = fun (l : list a) -> l (fun _ n -> S n) Z
 
 let n = length list3
 
+*)
+
+inductive unit =
+  | tt : unit
+
+let u = ()
+
 inductive bool =
   | true : bool
   | false : bool
@@ -53,13 +60,6 @@ let not (b : bool) : bool =
   match b with
   | true -> false
   | false -> true
-*)
-
-inductive unit =
-  | tt : unit
-
-let u = ()
-
    
 (*
 for bool the match has type

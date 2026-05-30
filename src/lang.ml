@@ -72,7 +72,7 @@ module Context = struct
   let inductive ctx (ind : V.inductive) =
     V.Inductive.register ind;
     let ctx = define ctx ind.name (Ind ind.id) ind.ty in
-    let ctx = List.fold_left (fun ctx (c,a) -> define ctx c (Ind_cons (c,[])) a) ctx ind.constructors in
+    let ctx = List.fold_left (fun ctx (c,a) -> define ctx c (Cons (c,[])) a) ctx ind.constructors in
     { ctx with inductive = ind :: ctx.inductive }
 
   (** Find the inductive type associated to a constructor. *)
@@ -121,6 +121,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     (* TODO: check this quote *)
     let a = quote ctx a in
     Let (x,a,t,u), b
+
   | Abs ((x,i,a),t) ->
     let a =
       match a with
@@ -131,6 +132,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let ctx' = Context.bind ctx x a in
     let t, b = infer ctx' t in
     T.Abs ((x,i),t), V.Pi((x,i,a), Context.close ctx b)
+
   | App (t,(i,u)) ->
     let tpos = t.pos in
     let t, c =
@@ -169,6 +171,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     in
     let u = check ctx u a in
     App (t,(i,u)), V.eval ((eval ctx u)::env) b
+
   | Var x ->
     let n, a =
       let rec aux n = function
@@ -182,6 +185,7 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
     let a = match a with Some a -> check ctx a Type | None -> fresh_meta ctx in
     let b = check (Context.bind ctx x (eval ctx a)) b Type in
     Pi ((x,i,a),b), Type
+
   | Fix t ->
     let t, c = infer ctx t in
     (
@@ -195,32 +199,24 @@ let rec infer (ctx:Context.t) (t:preterm) : term * ty =
         Fix t, a
       | _ -> assert false
     )
+
   | Hole ->
     let t = fresh_meta ctx in
     let a = eval ctx @@ fresh_meta ctx in
     t, a
+
   | Cast (t, a) ->
     let a = check ctx a Type in
     let a = eval ctx a in
     let t = check ctx t a in
     t, a
+
   | Type -> Type, Type
+
   | Fun _ -> failwith "TODO: infer for fun"
+
   | Match _ -> failwith "TODO: add (some) type inference for match"
-            (*
-  | Match (t, l) ->
-    let ind =
-      if l = [] then failwith "empty elimination not supported yet";
-      let c = fst @@ List.hd l in
-      match Context.find_constructor ctx c with
-      | Some ind -> ind
-      | None -> failwith "unknown constructor %s" c
-    in
-    let l = List.map (fun c -> List.assoc c l) (List.map fst ind.constructors) in
-    let l = (P.mk ~pos P.Hole)::l@[t] in
-    let l = List.map (fun t -> `Explicit, t) l in
-    infer ctx (P.apps ~pos (P.mk ~pos (Ind_case (ind.name, ind.id))) l)
-               *)
+
   | Nat -> Nat, Type
   | Z -> Z, Nat
   | S -> S, V.arr Nat Nat
@@ -237,7 +233,7 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     let b = quote ctx a in
     let a = eval ctx @@ Pi ((x, i, quote ctx ax), b) in
     check ctx t a
-  
+
   | Abs ((x,i,a),t), Pi ((_x',i',a'),(env,b)) when i = i' ->
     if a <> None then
       (
@@ -250,6 +246,25 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     let b = V.eval ((V.var ctx.level)::env) b in
     let t = check (Context.bind ctx x a') t b in
     Abs ((x,i),t)
+
+  (* TODO: we could also have functions for implicits. *)
+  | Fun l, Pi ((_x, `Explicit, Ind ind), _b) ->
+    let ind = V.Inductive.get ind in
+    (* TODO: avoid duplicate constructors *)
+    if List.length l <> List.length ind.constructors then failwith ~pos "invalid number of cases";
+    let l =
+      List.map
+        (fun (cons, args, t) ->
+           let a =
+             match List.assoc_opt cons ind.constructors with
+             | Some a -> a
+             | None -> failwith ~pos:t.P.pos "unexpected constructor"
+           in
+           let t = check ctx (P.abss (List.map (fun x -> x, `Explicit, None) args) t) a in
+           cons, t
+        ) l
+    in
+    Case l
 
   | _, Pi ((x,`Implicit,a),(env,b)) when not (P.is_fix t) ->
 

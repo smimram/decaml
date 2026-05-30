@@ -14,8 +14,8 @@ type t =
   | Fix of t
   | Type (** the type of types *)
   | Ind of inductive
-  | Ind_cons of string
-  | Ind_case of inductive
+  | Cons of string
+  | Case of (string * t) list
 
   | Nat
   | Z | S | Ind_nat
@@ -55,8 +55,10 @@ let rec to_string ?(pa=false) vars t =
   | Meta m -> "?" ^ string_of_int m
   | InsertedMeta (m,_) -> "?" ^ string_of_int m
   | Ind (ind,_) -> ind
-  | Ind_cons cons -> cons
-  | Ind_case (ind,_) -> ind ^ "_case"
+  | Cons cons -> cons
+  | Case l ->
+    let l = String.concat " | " @@ List.map (fun (cons, t) -> cons ^ " -> " ^ to_string vars t) l in
+    "case(" ^ l ^ ")"
   | Nat -> "nat"
   | Z -> "Z"
   | S -> "S"

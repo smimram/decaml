@@ -17,8 +17,8 @@ type t =
   | Fix of t * spine
   | Type
   | Ind of inductive_id (** type constructor of an inductive type with given identifier *)
-  | Ind_cons of string * spine (** a constructor of an inductive type *)
-  | Ind_case of inductive * spine (** elimination by case analysis *)
+  | Cons of string * spine (** a constructor of an inductive type *)
+  | Case of (string * t) list (** elimination by case analysis *)
 
   | Nat | Z | S of t option | Ind_nat of t list
 [@@deriving show]
@@ -186,8 +186,8 @@ let rec eval (env:environment) (t:term) =
     app_spine t s
   | Type -> Type
   | Ind (_,id) -> Ind id
-  | Ind_cons cons -> Ind_cons (cons, [])
-  | Ind_case (*(_,id)*) _ ->
+  | Cons cons -> Cons (cons, [])
+  | Case (*(_,id)*) _ ->
     (* let ind = get_ind id in *)
     failwith "TODO: eval ind_case"
     (* let ind : inductive = in *)
@@ -250,10 +250,8 @@ let rec quote l (t:t) : term =
     app_spine (Meta m.id) s
   | Type -> Type
   | Ind id -> Ind (Inductive.name_of_id id, id)
-  | Ind_cons (c,s) -> app_spine (Ind_cons c) s
-  | Ind_case (ind, s) ->
-    let ind : Term.inductive = ind.name, ind.id in
-    app_spine (Ind_case ind) s
+  | Cons (c,s) -> app_spine (Cons c) s
+  | Case cases -> Case (List.map (fun (cons,t) -> cons, quote l t) cases)
   | Nat -> Nat
   | Z -> Z
   | S None -> S
@@ -361,8 +359,8 @@ and unify_solve l m s t =
       | Fix (_env, _t) -> failwith "TODO: rename fix"
       | Type -> Type
       | Ind _ -> failwith "TODO: rename ind"
-      | Ind_cons _ -> failwith "TODO: rename ind_cons"
-      | Ind_case _ -> failwith "TODO: rename ind_case"
+      | Cons _ -> failwith "TODO: rename ind_cons"
+      | Case _ -> failwith "TODO: rename ind_case"
       | Nat -> Nat
       | Z -> Z
       | S None -> S
