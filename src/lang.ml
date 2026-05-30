@@ -227,12 +227,13 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
   match t.desc, V.force a with
 
   | App (t,(i,({desc = Var x; _} as tx))), a ->
-    print_endline "app to var hack";
-    let _, ax = infer ctx tx in
-    (* TODO: fix context for x *)
-    let b = quote ctx a in
-    let a = eval ctx @@ Pi ((x, i, quote ctx ax), b) in
-    check ctx t a
+    let t_x, ax = infer ctx tx in
+    let n = match t_x with Var n -> n | _ -> assert false in
+    (* Re-evaluate a with x's slot replaced by the fresh variable at ctx.level,
+       then quote at ctx.level+1 so that fresh variable lands at Var 0 (the Pi-bound slot). *)
+    let env' = List.mapi (fun i v -> if i = n then V.var ctx.level else v) ctx.environment in
+    let b = V.quote (ctx.level + 1) (V.eval env' (quote ctx a)) in
+    check ctx t (eval ctx @@ Pi ((x, i, quote ctx ax), b))
 
   | Abs ((x,i,a),t), Pi ((_x',i',a'),(env,b)) when i = i' ->
     if a <> None then
