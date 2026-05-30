@@ -252,22 +252,25 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     let ind = V.Inductive.get ind in
     (* TODO: avoid duplicate constructors *)
     if List.length l <> List.length ind.constructors then failwith ~pos "invalid number of cases";
-    Case (List.map (fun (cons, args, body) ->
-      let cons_ty =
-        match List.assoc_opt cons ind.constructors with
-        | Some a -> a
-        | None -> failwith ~pos:body.P.pos "unexpected constructor"
-      in
-      let rec go ctx ty args spine =
-        match args, V.force ty with
-        | [], _ ->
-          check ctx body (V.eval (V.Cons (cons, spine) :: ret_env) ret_body)
-        | arg :: rest, V.Pi ((_, i, a), (env, b)) ->
-          let v = V.var ctx.Context.level in
-          Abs ((arg, i), go (Context.bind ctx arg a) (V.eval (v :: env) b) rest ((i, v) :: spine))
-        | _, _ -> failwith ~pos:body.P.pos "constructor arity mismatch"
-      in
-      cons, go ctx cons_ty args []) l)
+    let l =
+      List.map (fun (cons, args, body) ->
+          let cons_ty =
+            match List.assoc_opt cons ind.constructors with
+            | Some a -> a
+            | None -> failwith ~pos:body.P.pos "unexpected constructor"
+          in
+          let rec go ctx ty args spine =
+            match args, V.force ty with
+            | [], _ ->
+              check ctx body (V.eval (V.Cons (cons, spine) :: ret_env) ret_body)
+            | arg :: rest, V.Pi ((_, i, a), (env, b)) ->
+              let v = V.var ctx.Context.level in
+              Abs ((arg, i), go (Context.bind ctx arg a) (V.eval (v :: env) b) rest ((i, v) :: spine))
+            | _, _ -> failwith ~pos:body.P.pos "constructor arity mismatch"
+          in
+          cons, go ctx cons_ty args []) l
+    in
+    Case l
 
   | _, Pi ((x,`Implicit,a),(env,b)) when not (P.is_fix t) ->
 
