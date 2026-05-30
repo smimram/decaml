@@ -248,20 +248,39 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
     Abs ((x,i),t)
 
   (* TODO: we could also have functions for implicits. *)
-  | Fun l, Pi ((_x, `Explicit, Ind ind), _b) ->
+  | Fun l, Pi ((_x, `Explicit, Ind ind), (b_env, b_term)) ->
     let ind = V.Inductive.get ind in
     (* TODO: avoid duplicate constructors *)
     if List.length l <> List.length ind.constructors then failwith ~pos "invalid number of cases";
     let l =
       List.map
-        (fun (cons, args, t) ->
-           let a =
+        (fun (cons, args, body) ->
+           let cons_ty =
              match List.assoc_opt cons ind.constructors with
              | Some a -> a
-             | None -> failwith ~pos:t.P.pos "unexpected constructor"
+             | None -> failwith ~pos:body.P.pos "unexpected constructor"
            in
-           let t = check ctx (P.abss (List.map (fun x -> x, `Explicit, None) args) t) a in
-           cons, t
+           (* Peel Pi layers from constructor type, extend context with arg types,
+              build the constructor applied to fresh vars for the scrutinee,
+              then check the body against the return type. *)
+           let rec check_branch ctx cons_ty args cons_spine =
+             match args with
+             | [] ->
+               let scrutinee = V.Cons (cons, cons_spine) in
+               let ret_ty = V.eval (scrutinee :: b_env) b_term in
+               check ctx body ret_ty
+             | arg :: rest ->
+               (match V.force cons_ty with
+                | V.Pi ((_, i, a), (env, b)) ->
+                  let level = ctx.Context.level in
+                  let ctx' = Context.bind ctx arg a in
+                  let var = V.var level in
+                  let next_ty = V.eval (var :: env) b in
+                  let branch_term = check_branch ctx' next_ty rest ((i, var) :: cons_spine) in
+                  Abs ((arg, i), branch_term)
+                | _ -> failwith ~pos:body.P.pos "constructor arity mismatch")
+           in
+           cons, check_branch ctx cons_ty args []
         ) l
     in
     Case l
