@@ -262,9 +262,9 @@ and check (ctx:Context.t) (t:preterm) (a:ty) : term =
           let rec go ctx ty args spine =
             match args, V.force ty with
             | [], _ ->
-              check ctx body (V.eval (V.Cons (cons, spine) :: ret_env) ret_body)
-            | arg :: rest, V.Pi ((_, i, a), (env, b)) ->
-              let v = V.var ctx.Context.level in
+              check ctx body (V.eval (Cons (cons, spine) :: ret_env) ret_body)
+            | arg :: rest, Pi ((_, i, a), (env, b)) ->
+              let v = V.var ctx.level in
               Abs ((arg, i), go (Context.bind ctx arg a) (V.eval (v :: env) b) rest ((i, v) :: spine))
             | _, _ -> failwith ~pos:body.P.pos "constructor arity mismatch"
           in
