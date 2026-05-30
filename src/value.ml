@@ -273,19 +273,91 @@ exception Unification
 (** Unify two values. *)
 let rec unify l (t:t) (u:t) =
   Common.debug "UNIFY" "%s VS %s" (show t) (show u);
+  let check b = if not b then raise Unification in
+
+  (* Unify spines. *)
+  let spines l s s' =
+    check (List.length s = List.length s');
+    List.iter2 (fun (i,t) (i',t') -> check (i = i'); unify l t t') s s'
+  in
+
+  (* Given a context Γ (in l), make sure that a meta-variable ?α (in m) applied to the spine s equals to a term t. *)
+  let solve l m s t =
+    Common.debug "SOLVE" "%s ... = %s" (Meta.to_string m) (show t);
+    (* From Γ and the spine, we construct a partial renaming from Γ to Δ (ie a partial function from the variables of Δ to those of Γ). *)
+    let pren =
+      let rec aux = function
+        | (_,t)::s ->
+          let dom, ren = aux s in
+          (
+            match force t with
+            | Var (x, []) when not (IntMap.mem x ren) -> dom+1, IntMap.add x dom ren
+            | _ -> raise Unification
+          )
+        | [] -> 0, IntMap.empty
+      in
+      let dom, ren = aux s in
+      { dom; cod = l; ren }
+    in
+    (* Add an extra bound variable to a renaming, ie we go from σ : Γ → Δ to Γ,x:A[σ] → Δ,x:A. *)
+    let lift pren =
+      { dom = pren.dom+1; cod = pren.cod+1; ren = IntMap.add pren.cod pren.dom pren.ren }
+    in
+    (* Apply a partial renaming to a value. Along the way, we also make sure that the metavariable does not occur in the term (occurs check). *)
+    let rename m pren (t : value) : term =
+      let rec aux pren : value -> term = function
+        | Meta (m',s) ->
+          check (m <> m'); (* occurs check *)
+          aux_spine pren (Term.Meta m'.id) s
+        | Abs ((x,i),(env,t)) ->
+          let t = eval ((var pren.cod)::env) t in
+          Abs ((x,i),aux (lift pren) t)
+        | Var (n, s) ->
+          (
+            match IntMap.find_opt n pren.ren with
+            | Some n' -> aux_spine pren (Var (pren.dom-1-n')) s
+            | None ->
+              Printf.printf "escaping variable %d\n%!" n;
+              (* we have an escaping variable *)
+              raise Unification
+          )
+        | Pi ((x,i,a),(env,t)) ->
+          let t = eval ((var pren.cod)::env) t in
+          Pi ((x,i,aux pren a), aux (lift pren) t)
+        | Fix (_env, _t) -> failwith "TODO: rename fix"
+        | Type -> Type
+        | Ind _ -> failwith "TODO: rename ind"
+        | Cons _ -> failwith "TODO: rename ind_cons"
+        | Case _ -> failwith "TODO: rename ind_case"
+        | Nat -> Nat
+        | Z -> Z
+        | S None -> S
+        | S (Some t) -> App (S, (`Explicit, aux pren t))
+        | Ind_nat s -> Term.rev_apps_explicit Ind_nat (List.map (aux pren) s)
+      and aux_spine pren (t:term) : spine -> term = function
+        | (i,u)::s -> App (aux_spine pren t s, (i, aux pren u))
+        | [] -> t
+      in
+      aux pren t
+    in
+    let t = rename m pren t in
+    let solution = eval [] @@ Term.abss (List.mapi (fun n i -> "x" ^ string_of_int (n+1), i) @@ List.rev @@ List.map fst s) t in
+    Meta.set m solution
+  in
+
   let t = force t in
   let u = force u in
   match t, u with
   | Abs ((_,i),(env,b)), Abs ((_,i'),(env',b')) ->
-    unify_check (i = i');
+    check (i = i');
     let b = eval ((var l)::env) b in
     let b' = eval ((var l)::env') b' in
     unify (l+1) b b'
   | Var (x,s), Var (x',s') ->
-    unify_check (x = x');
-    unify_spines l s s'
+    check (x = x');
+    spines l s s'
   | Pi ((_,i,a),(env,b)), Pi ((_,i',a'),(env',b')) ->
-    unify_check (i = i');
+    check (i = i');
     unify l a a';
     let b = eval ((var l)::env) b in
     let b' = eval ((var l)::env') b' in
@@ -302,79 +374,10 @@ let rec unify l (t:t) (u:t) =
     )
   | Ind _, Ind _ when t = u -> ()
   (* | Ind_cons ( *)
-  | Meta (m,s), Meta (m',s') when m.id = m'.id -> unify_spines l s s'
-  | Meta (m,s), t -> unify_solve l m s t
-  | t, Meta (m,s) -> unify_solve l m s t
+  | Meta (m,s), Meta (m',s') when m.id = m'.id -> spines l s s'
+  | Meta (m,s), t -> solve l m s t
+  | t, Meta (m,s) -> solve l m s t
   | _ -> raise Unification
-
-and unify_check b = if not b then raise Unification
-
-and unify_spines l s s' =
-  unify_check (List.length s = List.length s');
-  List.iter2 (fun (i,t) (i',t') -> unify_check (i = i'); unify l t t') s s'
-
-(** Given a context Γ (in l), make sure that a meta-variable ?α (in m) applied to the spine s equals to a term t. *)
-and unify_solve l m s t =
-  Common.debug "SOLVE" "%s ... = %s" (Meta.to_string m) (show t);
-  (* From Γ and the spine, we construct a partial renaming from Γ to Δ (ie a partial function from the variables of Δ to those of Γ). *)
-  let pren =
-    let rec aux = function
-      | (_,t)::s ->
-        let dom, ren = aux s in
-        (
-          match force t with
-          | Var (x, []) when not (IntMap.mem x ren) -> dom+1, IntMap.add x dom ren
-          | _ -> raise Unification
-        )
-      | [] -> 0, IntMap.empty
-    in
-    let dom, ren = aux s in
-    { dom; cod = l; ren }
-  in
-  (* Add an extra bound variable to a renaming, ie we go from σ : Γ → Δ to Γ,x:A[σ] → Δ,x:A. *)
-  let lift pren =
-    { dom = pren.dom+1; cod = pren.cod+1; ren = IntMap.add pren.cod pren.dom pren.ren }
-  in
-  (* Apply a partial renaming to a value. Along the way, we also make sure that the metavariable does not occur in the term (occurs check). *)
-  let rename m pren (t : value) : term =
-    let rec aux pren : value -> term = function
-      | Meta (m',s) ->
-        unify_check (m <> m'); (* occurs check *)
-        aux_spine pren (Term.Meta m'.id) s
-      | Abs ((x,i),(env,t)) ->
-        let t = eval ((var pren.cod)::env) t in
-        Abs ((x,i),aux (lift pren) t)
-      | Var (n, s) ->
-        (
-          match IntMap.find_opt n pren.ren with
-          | Some n' -> aux_spine pren (Var (pren.dom-1-n')) s
-          | None ->
-            Printf.printf "escaping variable %d\n%!" n;
-            (* we have an escaping variable *)
-            raise Unification
-        )
-      | Pi ((x,i,a),(env,t)) ->
-        let t = eval ((var pren.cod)::env) t in
-        Pi ((x,i,aux pren a), aux (lift pren) t)
-      | Fix (_env, _t) -> failwith "TODO: rename fix"
-      | Type -> Type
-      | Ind _ -> failwith "TODO: rename ind"
-      | Cons _ -> failwith "TODO: rename ind_cons"
-      | Case _ -> failwith "TODO: rename ind_case"
-      | Nat -> Nat
-      | Z -> Z
-      | S None -> S
-      | S (Some t) -> App (S, (`Explicit, aux pren t))
-      | Ind_nat s -> Term.rev_apps_explicit Ind_nat (List.map (aux pren) s)
-    and aux_spine pren (t:term) : spine -> term = function
-      | (i,u)::s -> App (aux_spine pren t s, (i, aux pren u))
-      | [] -> t
-    in
-    aux pren t
-  in
-  let t = rename m pren t in
-  let solution = eval [] @@ Term.abss (List.mapi (fun n i -> "x" ^ string_of_int (n+1), i) @@ List.rev @@ List.map fst s) t in
-  Meta.set m solution
 
 let unify l t u =
   try unify l t u; true
